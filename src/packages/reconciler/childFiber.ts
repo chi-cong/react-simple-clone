@@ -1,5 +1,7 @@
-import { Fiber } from "./fiber";
+import { createWorkInProgress, Fiber, Element } from "./fiber";
 import { createFiber } from "./fiber";
+import { ChildDeletion } from "./fiberFlags";
+import { FunctionComponent, HostText } from "./workTags";
 
 /**
  * This is a factory function that creates a reconciler function.
@@ -13,18 +15,81 @@ import { createFiber } from "./fiber";
  * @returns A `reconcileChildFibers` function.
  */
 export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
+  function useFiber(fiber: Fiber, pendingProps: any) {
+    const clone = createWorkInProgress(fiber, pendingProps);
+    clone.index = 0;
+    clone.sibling = null;
+    return clone;
+  }
+
+  function deleteChild(returnFiber: Fiber, childToDelete: Fiber) {
+    if (!shouldTrackSideEffects) return;
+
+    const deletions = returnFiber.deletions;
+    if (deletions === null) {
+      returnFiber.deletions = [childToDelete];
+      returnFiber.flags |= ChildDeletion;
+    } else {
+      deletions.push(childToDelete);
+    }
+  }
+
+  function deleteRemainingChildren(
+    returnFiber: Fiber,
+    currentFirstChild: Fiber | null
+  ) {
+    let childToDelete = currentFirstChild;
+    while (childToDelete !== null) {
+      deleteChild(returnFiber, childToDelete);
+      childToDelete = childToDelete.sibling;
+    }
+    return null;
+  }
+
   // TODO: Implement this function. It should handle creating or updating a fiber for a text node.
   function updateTextNode(
     returnFiber: Fiber,
     current: Fiber | null,
     textContent: string
   ) {
-    return null;
+    if (current === null || current.tag !== HostText) {
+      const created = createFiber(
+        HostText,
+        textContent,
+        null,
+        returnFiber.mode
+      );
+      created.return = returnFiber;
+      return created;
+    } else {
+      const existing = useFiber(current, textContent);
+      existing.return = returnFiber;
+      return existing;
+    }
   }
 
   // TODO: Implement this function. It should handle creating or updating a fiber for a React element.
-  function updateElement() {
-    return null;
+  function updateElement(
+    returnFiber: Fiber,
+    current: Fiber | null,
+    element: Element
+  ): Fiber {
+    if (current !== null) {
+      if (current.elementType === element.type) {
+        const existing = useFiber(current, element.props);
+        existing.return = returnFiber;
+        return existing;
+      }
+    }
+    const created = createFiber(
+      FunctionComponent,
+      element.props,
+      element.key,
+      returnFiber.mode
+    );
+    created.type = element.type;
+    created.return = returnFiber;
+    return created;
   }
 
   /**
@@ -68,6 +133,30 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
     }
   }
 
+  function reconcileSingleElement(
+    returnFiber: Fiber,
+    currentFirstChild: Fiber | null,
+    element: Element
+  ) {
+    const key = element.key;
+    let child = currentFirstChild;
+    while (child !== null) {
+      if (child.key === key) {
+        const elementType = child.elementType;
+        if (elementType === element.type) {
+          deleteRemainingChildren(returnFiber, child.sibling);
+          const existing = useFiber(child, element.props);
+          return existing;
+        }
+        deleteRemainingChildren(returnFiber, child);
+        break;
+      } else {
+        deleteChild(returnFiber, child);
+      }
+      child = child.sibling;
+    }
+  }
+
   /**
    * This is the core reconciliation function for a set of children.
    * It diffs the new children against the old children (fibers) and creates/updates/deletes fibers as necessary.
@@ -77,11 +166,14 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
    * @param newChild The new children (can be a single element, text, or an array of them).
    * @returns The new first child fiber.
    */
+
   function reconcileChildFibers(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
     newChild: any
   ): Fiber | null {
+    if (typeof newChild === "object" && newChild !== null) {
+    }
     // TODO: This is the main missing piece. You need to implement the reconciliation logic here.
     // The logic will differ based on the type of `newChild`.
 

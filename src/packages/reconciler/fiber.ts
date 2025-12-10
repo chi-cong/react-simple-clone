@@ -1,6 +1,7 @@
 export type Fiber = {
   tag: number;
   key: string | null;
+  elementType: any;
   type: any;
   stateNode: any;
   return: Fiber | null;
@@ -21,6 +22,15 @@ export type Fiber = {
   expirationTime: number;
   childExpirationTime: number;
   alternate: Fiber | null;
+  deletions: Array<Fiber> | null;
+  flags: number;
+};
+
+export type Element = {
+  type: any;
+  key: string | null;
+  ref: any;
+  props: any;
 };
 
 export const createFiber = (
@@ -32,6 +42,7 @@ export const createFiber = (
   return {
     tag,
     key,
+    elementType: null,
     type: null,
     stateNode: null,
     return: null,
@@ -52,6 +63,8 @@ export const createFiber = (
     expirationTime: 0,
     childExpirationTime: 0,
     alternate: null,
+    deletions: null,
+    flags: 0,
   };
 };
 
@@ -83,8 +96,6 @@ export const createWorkInProgress = (
     workInProgress.lastEffect = null;
   }
 
-  workInProgress.childExpirationTime = current.childExpirationTime;
-  workInProgress.expirationTime = current.expirationTime;
   workInProgress.child = current.child;
   workInProgress.memoizedProps = current.memoizedProps;
   workInProgress.memoizedState = current.memoizedState;
