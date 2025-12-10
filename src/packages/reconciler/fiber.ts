@@ -1,3 +1,5 @@
+import { HostComponent } from "./workTags";
+
 export type Fiber = {
   tag: number;
   key: string | null;
@@ -66,6 +68,17 @@ export const createFiber = (
     deletions: null,
     flags: 0,
   };
+};
+
+export const createFiberFromElement = (
+  element: Element,
+  mode: number
+): Fiber => {
+  const fiberTag = HostComponent;
+
+  const fiber = createFiber(fiberTag, element.props, element.key, mode);
+  fiber.type = element.type;
+  return fiber;
 };
 
 export const createWorkInProgress = (

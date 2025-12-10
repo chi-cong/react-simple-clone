@@ -1,6 +1,6 @@
 import { createWorkInProgress, Fiber, Element } from "./fiber";
 import { createFiber } from "./fiber";
-import { ChildDeletion } from "./fiberFlags";
+import { ChildDeletion, Placement } from "./fiberFlags";
 import { FunctionComponent, HostText } from "./workTags";
 
 /**
@@ -46,7 +46,6 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
     return null;
   }
 
-  // TODO: Implement this function. It should handle creating or updating a fiber for a text node.
   function updateTextNode(
     returnFiber: Fiber,
     current: Fiber | null,
@@ -68,7 +67,6 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
     }
   }
 
-  // TODO: Implement this function. It should handle creating or updating a fiber for a React element.
   function updateElement(
     returnFiber: Fiber,
     current: Fiber | null,
@@ -81,6 +79,7 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
         return existing;
       }
     }
+    // createFiberFromElement
     const created = createFiber(
       FunctionComponent,
       element.props,
@@ -90,6 +89,38 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
     created.type = element.type;
     created.return = returnFiber;
     return created;
+  }
+
+  function updateSlot(
+    returnFiber: Fiber,
+    oldFiber: Fiber | null,
+    newChild: any
+  ) {
+    const key = oldFiber !== null ? oldFiber.key : null;
+
+    if (
+      (typeof newChild === "string" && newChild !== "") ||
+      typeof newChild === "number" ||
+      typeof newChild === "bigint"
+    ) {
+      // Text nodes don't have keys. If the previous node is implicitly keyed
+      // we can continue to replace it without aborting even if it is not a text
+      // node.
+      if (key !== null) {
+        return null;
+      }
+      return updateTextNode(returnFiber, oldFiber, "" + newChild);
+    }
+
+    if (typeof newChild === "object" && newChild !== null) {
+      if (newChild.key === key) {
+        return updateElement(returnFiber, oldFiber, newChild);
+      } else {
+        return null;
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -112,13 +143,12 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
     }
     newFiber.index = newIndex;
     const current = newFiber.alternate;
-    if (current) {
+    if (current !== null) {
       const oldIndex = current.index;
       // If the old index is smaller than the last placed index, it means this node
       // has moved forward in the list of siblings, so we need to mark it for placement.
       if (oldIndex < lastPlacedIndex) {
-        // TODO: Mark this fiber for placement.
-        // e.g., newFiber.flags |= Placement;
+        newFiber.flags |= Placement;
         return lastPlacedIndex;
       } else {
         // This node is in a correct position relative to the previous ones.
@@ -127,17 +157,23 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
       }
     } else {
       // This is a new fiber that needs to be inserted.
-      // TODO: Mark this fiber for placement.
-      // e.g., newFiber.flags |= Placement;
+      newFiber.flags |= Placement;
       return lastPlacedIndex;
     }
+  }
+
+  function placeSingleChild(newFiber: Fiber): Fiber {
+    if (!shouldTrackSideEffects || newFiber.alternate === null) {
+      newFiber.flags |= Placement;
+    }
+    return newFiber;
   }
 
   function reconcileSingleElement(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
     element: Element
-  ) {
+  ): Fiber {
     const key = element.key;
     let child = currentFirstChild;
     while (child !== null) {
@@ -154,6 +190,98 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
         deleteChild(returnFiber, child);
       }
       child = child.sibling;
+    }
+    // createFiberFromElement
+    const created = createFiber(
+      FunctionComponent,
+      element.props,
+      element.key,
+      returnFiber.mode
+    );
+    created.return = returnFiber;
+    return created;
+  }
+
+  function reconcileSingleTextNode(
+    returnFiber: Fiber,
+    currentFirstChild: Fiber | null,
+    textContent: string
+  ) {
+    if (currentFirstChild !== null && currentFirstChild.tag === HostText) {
+      deleteRemainingChildren(returnFiber, currentFirstChild.sibling);
+      const existing = useFiber(currentFirstChild, textContent);
+      existing.return = returnFiber;
+      return existing;
+    }
+    // The existing first child is not a text node so we need to create one
+    // and delete the existing ones.
+    deleteRemainingChildren(returnFiber, currentFirstChild);
+    const created = createFiber(HostText, textContent, null, returnFiber.mode);
+    created.return = returnFiber;
+    return created;
+  }
+
+  function reconcileChildrenArray(
+    returnFiber: Fiber,
+    currentFirstChild: Fiber | null,
+    newChildren: Array<any>
+  ) {
+    let knownKeys: Set<string> | null = null;
+    let resultingFirstChild: Fiber | null = null;
+    let previousNewFiber: Fiber | null = null;
+
+    let oldFiber = currentFirstChild;
+    let newIndex = 0;
+    let lastPlacedIndex = 0;
+    let nextOldFiber = null;
+
+    for (; oldFiber !== null && newIndex < newChildren.length; newIndex++) {
+      if (oldFiber.index > newIndex) {
+        nextOldFiber = oldFiber;
+        oldFiber = null;
+      } else {
+        nextOldFiber = oldFiber.sibling;
+      }
+      const newFiber = updateSlot(returnFiber, oldFiber, newChildren[newIndex]);
+      if (newFiber === null) {
+        if (oldFiber === null) {
+          oldFiber = nextOldFiber;
+        }
+        break;
+      }
+
+      if (shouldTrackSideEffects) {
+        if (oldFiber && newFiber.alternate === null) {
+          // We matched the slot, but we didn't reuse the existing fiber, so we
+          // need to delete the existing child.
+          deleteChild(returnFiber, oldFiber);
+        }
+      }
+
+      lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIndex);
+
+      if (previousNewFiber === null) {
+        resultingFirstChild = newFiber;
+      } else {
+        previousNewFiber.sibling = newFiber;
+      }
+      previousNewFiber = newFiber;
+      oldFiber = nextOldFiber;
+    }
+
+    if (newIndex === newChildren.length) {
+      // We've reached the end of the new children. We can delete the rest.
+      deleteRemainingChildren(returnFiber, oldFiber);
+      return resultingFirstChild;
+    }
+
+    if (oldFiber === null) {
+      for (; newIndex < newChildren.length; newIndex++) {
+        // const newFiber = createFiber(
+        //   FunctionComponent,
+        //   newChildren[newIndex],
+        //   null);
+      }
     }
   }
 
@@ -173,6 +301,21 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
     newChild: any
   ): Fiber | null {
     if (typeof newChild === "object" && newChild !== null) {
+      const firstChild = placeSingleChild(
+        reconcileSingleElement(returnFiber, currentFirstChild, newChild)
+      );
+    }
+    if (
+      (typeof newChild === "string" && newChild !== null) ||
+      typeof newChild === "number" ||
+      typeof newChild === "bigint"
+    ) {
+      const firstChild = placeSingleChild(
+        reconcileSingleTextNode(returnFiber, currentFirstChild, "" + newChild)
+      );
+      return firstChild;
+    }
+    if (Array.isArray(newChild)) {
     }
     // TODO: This is the main missing piece. You need to implement the reconciliation logic here.
     // The logic will differ based on the type of `newChild`.
