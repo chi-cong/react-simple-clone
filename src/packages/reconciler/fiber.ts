@@ -1,4 +1,4 @@
-import { HostComponent } from "./workTags";
+import { FunctionComponent, HostComponent } from "./workTags";
 
 export type Fiber = {
   tag: number;
@@ -74,7 +74,7 @@ export const createFiberFromElement = (
   element: Element,
   mode: number
 ): Fiber => {
-  const fiberTag = HostComponent;
+  const fiberTag = FunctionComponent;
 
   const fiber = createFiber(fiberTag, element.props, element.key, mode);
   fiber.type = element.type;
