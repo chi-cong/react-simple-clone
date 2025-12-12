@@ -1,6 +1,6 @@
 import { Fiber } from "./fiber";
 import { HostComponent, HostText } from "./workTags";
-import { Deletion, Placement, Update } from "./fiberFlags";
+import { Placement, Update } from "./fiberFlags";
 
 /**
  * Commits a placement side effect (inserting a node into the DOM).

@@ -1,7 +1,7 @@
 import { createWorkInProgress, Fiber, Element } from "./fiber";
 import { createFiber, createFiberFromElement } from "./fiber";
 import { ChildDeletion, Placement } from "./fiberFlags";
-import { FunctionComponent, HostText } from "./workTags";
+import { HostText } from "./workTags";
 
 /**
  * This is a factory function that creates a reconciler function.
@@ -410,28 +410,14 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
       return firstChild;
     }
     if (Array.isArray(newChild)) {
-      // const firstChild = placeSingleChild(
-      //   reconcileChildrenArray(returnFiber, currentFirstChild, newChild)
-      // );
-      // return firstChild;
+      const firstChild = reconcileChildrenArray(
+        returnFiber,
+        currentFirstChild,
+        newChild
+      );
+      return firstChild;
     }
-    // TODO: This is the main missing piece. You need to implement the reconciliation logic here.
-    // The logic will differ based on the type of `newChild`.
-
-    // 1. Handle a single new child (object for an element, or string/number for a text node).
-    //    - If `newChild` is an object, it's a React element.
-    //    - If `newChild` is a string or number, it's a text node.
-    //    - You'll need to compare it with `currentFirstChild` to see if you can reuse the old fiber.
-
-    // 2. Handle multiple new children (when `newChild` is an array).
-    //    - This is the most complex part. You'll iterate through the new children and the old children (fibers) simultaneously.
-    //    - You'll need to handle creating new fibers, updating existing ones, and deleting old ones that are no longer present.
-    //    - For efficient updates, you should handle keyed elements. This involves creating a map of old children by their key.
-
-    // 3. Handle deletion of remaining old children.
-    //    - After iterating through the new children, any remaining old children fibers need to be marked for deletion.
-
-    return null; // Placeholder
+    return deleteRemainingChildren(returnFiber, currentFirstChild);
   }
   return reconcileChildFibers;
 };

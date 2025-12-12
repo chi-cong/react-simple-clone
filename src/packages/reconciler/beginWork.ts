@@ -1,6 +1,13 @@
 import { Fiber } from "./fiber";
-import { HostComponent, HostRoot, HostText } from "./workTags";
+import {
+  HostComponent,
+  HostRoot,
+  HostText,
+  FunctionComponent,
+} from "./workTags";
 import { reconcileChildFibers } from "./childFiber";
+import { renderWithHooks } from "./fiberHooks";
+import { PerformedWork } from "./fiberFlags";
 
 /**
  * This is the "begin" phase of a fiber. It's responsible for:
@@ -25,7 +32,13 @@ export const beginWork = (
     case HostText:
       // Text nodes don't have children, so there's nothing to begin.
       return null;
-    // TODO: Add cases for FunctionComponent, ClassComponent, etc.
+    case FunctionComponent:
+      return updateFunctionComponent(
+        current,
+        workInProgress,
+        workInProgress.type,
+        workInProgress.pendingProps
+      );
     default:
       console.error("Unknown tag in beginWork", workInProgress.tag);
       return null;
@@ -43,6 +56,23 @@ function updateHostRoot(current: Fiber | null, workInProgress: Fiber) {
 function updateHostComponent(current: Fiber | null, workInProgress: Fiber) {
   const newChildren = workInProgress.pendingProps.children;
   reconcileChildren(current, workInProgress, newChildren);
+  return workInProgress.child;
+}
+
+function updateFunctionComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  Component: any,
+  nextProps: any
+) {
+  let nextChildren = renderWithHooks(
+    current,
+    workInProgress,
+    Component,
+    nextProps
+  );
+  workInProgress.flags |= PerformedWork;
+  reconcileChildren(current, workInProgress, nextChildren);
   return workInProgress.child;
 }
 
