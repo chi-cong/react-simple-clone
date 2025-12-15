@@ -54,8 +54,10 @@ function updateHostRoot(current: Fiber | null, workInProgress: Fiber) {
 }
 
 function updateHostComponent(current: Fiber | null, workInProgress: Fiber) {
-  const newChildren = workInProgress.pendingProps.children;
-  reconcileChildren(current, workInProgress, newChildren);
+  const nextProps = workInProgress.pendingProps;
+  const nextChildren = nextProps.children;
+
+  reconcileChildren(current, workInProgress, nextChildren);
   return workInProgress.child;
 }
 

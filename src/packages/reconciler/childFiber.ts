@@ -162,6 +162,8 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
       const matchedFiber =
         existingChildren.get(newChild.key === null ? newIndex : newChild.key) ||
         null;
+      const update = updateElement(returnFiber, matchedFiber, newChild);
+      return update;
     }
     return null;
   }
@@ -277,7 +279,6 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
     currentFirstChild: Fiber | null,
     newChildren: Array<any>
   ) {
-    let knownKeys: Set<string> | null = null;
     let resultingFirstChild: Fiber | null = null;
     let previousNewFiber: Fiber | null = null;
 
@@ -398,6 +399,7 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
       const firstChild = placeSingleChild(
         reconcileSingleElement(returnFiber, currentFirstChild, newChild)
       );
+      return firstChild;
     }
     if (
       (typeof newChild === "string" && newChild !== null) ||
