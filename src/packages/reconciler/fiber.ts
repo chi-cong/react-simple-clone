@@ -1,3 +1,4 @@
+import { NoFlags } from "./fiberFlags";
 import { FunctionComponent, HostComponent } from "./workTags";
 
 export type Fiber = {
@@ -26,6 +27,8 @@ export type Fiber = {
   alternate: Fiber | null;
   deletions: Array<Fiber> | null;
   flags: number;
+  lanes: number;
+  childLanes: number;
 };
 
 export type Element = {
@@ -67,6 +70,8 @@ export const createFiber = (
     alternate: null,
     deletions: null,
     flags: 0,
+    lanes: 1,
+    childLanes: 0,
   };
 };
 
@@ -94,6 +99,7 @@ export const createWorkInProgress = (
       current.key,
       current.mode
     );
+    workInProgress.elementType = current.elementType;
     workInProgress.type = current.type;
     workInProgress.stateNode = current.stateNode;
 
@@ -107,9 +113,14 @@ export const createWorkInProgress = (
     workInProgress.nextEffect = null;
     workInProgress.firstEffect = null;
     workInProgress.lastEffect = null;
+    workInProgress.flags = NoFlags;
+    workInProgress.deletions = null;
   }
 
+  workInProgress.flags = current.flags;
   workInProgress.child = current.child;
+  workInProgress.childLanes = current.childLanes;
+  workInProgress.lanes = current.lanes;
   workInProgress.memoizedProps = current.memoizedProps;
   workInProgress.memoizedState = current.memoizedState;
   workInProgress.updateQueue = current.updateQueue;

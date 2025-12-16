@@ -20,7 +20,7 @@ export type UpdateQueue<S, A> = {
 export type Hook = {
   memoizedState: any;
   baseState: any;
-  // baseQueue: Update<any, any> | null;
+  baseQueue: Update<any, any> | null;
   queue: any;
   next: Hook | null;
 };
@@ -39,12 +39,11 @@ function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
     : action;
 }
 
-export function renderWithHooks<Props, SecondArg>(
+export function renderWithHooks<Props>(
   current: Fiber | null,
   workInProgress: Fiber,
-  Component: (p: Props, arg: SecondArg) => any,
-  props: Props,
-  secondArg: SecondArg
+  Component: (p: Props) => any,
+  props: Props
 ) {
   workInProgress.memoizedState = null;
   workInProgress.updateQueue = null;
@@ -52,13 +51,14 @@ export function renderWithHooks<Props, SecondArg>(
   SharedInternals.Hook =
     current === null || current.memoizedState === null ? "" : "";
 
-  return Component(props, secondArg);
+  return Component(props);
 }
 
 function mountWorkInProgress(): Hook {
   const hook: Hook = {
     memoizedState: null,
     baseState: null,
+    baseQueue: null,
     queue: null,
     next: null,
   };
@@ -76,7 +76,26 @@ function dispatchSetState<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
   action: A
-) {}
+) {
+  const update: Update<S, A> = {
+    lane: 1,
+    action,
+    hasEagerState: false,
+    eagerState: null,
+    next: null as any,
+  };
+
+  function findRoot(fiber: Fiber) {
+    while (fiber.return !== null) {
+      fiber = fiber.return;
+    }
+    return fiber;
+  }
+
+  const root = findRoot(fiber);
+  if (root !== null) {
+  }
+}
 
 function mountState<S>(initialState: (() => S) | S) {
   const hook = mountWorkInProgress();
@@ -85,7 +104,7 @@ function mountState<S>(initialState: (() => S) | S) {
     initialState = initialStateInitializer();
   }
   hook.memoizedState = hook.baseState = initialState;
-  const queue = {
+  const queue: UpdateQueue<S, BasicStateAction<S>> = {
     pending: null,
     lanes: 1,
     dispatch: null,
@@ -93,10 +112,13 @@ function mountState<S>(initialState: (() => S) | S) {
     lastRenderedState: initialState,
   };
   hook.queue = queue;
-  const dispatch: Dispatch<BasicStateAction<S>> = (
-    action: BasicStateAction<S>
-  ) => {};
-  return [initialState];
+  const dispatch: Dispatch<BasicStateAction<S>> = dispatchSetState.bind(
+    null,
+    currentlyRenderingFiber!,
+    hook.queue
+  );
+  queue.dispatch = dispatch;
+  return [hook.memoizedState, dispatch];
 }
 
 const HookDispatcherOnMount = {

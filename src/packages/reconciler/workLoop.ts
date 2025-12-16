@@ -5,6 +5,16 @@ import { completeWork } from "./completeWork";
 // The current fiber being processed.
 let workInProgress: Fiber | null = null;
 
+function markUpdateLaneFromFiberToRoot(sourceFiber: Fiber, lane: number) {
+  sourceFiber.lanes = sourceFiber.lanes;
+  let alternate = sourceFiber.alternate;
+  if (alternate !== null) {
+    alternate.lanes = alternate.lanes | lane;
+  }
+}
+
+function scheduleUpdateOnFiber(root: Fiber, fiber: Fiber) {}
+
 /**
  * Prepares the reconciler for a new render.
  * This sets up the initial fiber to begin work on.
