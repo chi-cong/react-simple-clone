@@ -1,5 +1,9 @@
 import { Fiber } from "./fiber";
 import SharedInternals from "./sharedInternals";
+import {
+  markUpdateLaneFromFiberToRoot,
+  scheduleUpdateOnFiber,
+} from "./workLoop";
 
 export type Update<S, A> = {
   lane: number;
@@ -77,23 +81,29 @@ function dispatchSetState<S, A>(
   queue: UpdateQueue<S, A>,
   action: A
 ) {
+  // hardcode lane, every update would be synchronize
+  const lane = 1;
+
   const update: Update<S, A> = {
-    lane: 1,
+    lane,
     action,
     hasEagerState: false,
     eagerState: null,
     next: null as any,
   };
 
-  function findRoot(fiber: Fiber) {
-    while (fiber.return !== null) {
-      fiber = fiber.return;
-    }
-    return fiber;
+  const pending = queue.pending;
+  if (pending === null) {
+    update.next = update;
+  } else {
+    update.next = pending.next;
+    pending.next = update;
   }
+  queue.pending = update;
 
-  const root = findRoot(fiber);
+  const root = markUpdateLaneFromFiberToRoot(fiber, lane);
   if (root !== null) {
+    scheduleUpdateOnFiber(root, fiber, lane);
   }
 }
 

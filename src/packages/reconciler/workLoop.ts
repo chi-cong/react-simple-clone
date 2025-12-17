@@ -1,19 +1,63 @@
-import { Fiber } from "./fiber";
+import { Fiber, FiberRoot } from "./fiber";
 import { beginWork } from "./beginWork";
-import { completeWork } from "./completeWork";
+import { HostRoot } from "./workTags";
 
 // The current fiber being processed.
 let workInProgress: Fiber | null = null;
 
-function markUpdateLaneFromFiberToRoot(sourceFiber: Fiber, lane: number) {
-  sourceFiber.lanes = sourceFiber.lanes;
-  let alternate = sourceFiber.alternate;
-  if (alternate !== null) {
-    alternate.lanes = alternate.lanes | lane;
-  }
+/** from ReactFiberLane */
+function mergeLanes(lane: number, newLane: number) {
+  return lane | newLane;
 }
 
-function scheduleUpdateOnFiber(root: Fiber, fiber: Fiber) {}
+function performWorkSync() {}
+
+function ensureRootIsScheduled(root: FiberRoot): void {
+  /**
+   * In the actual react source code, this function does not call
+   * performSyncWorkOnRoot, it calls ensureScheduleIsScheduled instead.
+   * But for the sake of simplification, We treat everything as synchronous.
+   */
+
+  performWorkSync();
+}
+
+export function markUpdateLaneFromFiberToRoot(
+  sourceFiber: Fiber,
+  lane: number
+) {
+  let node = sourceFiber;
+
+  sourceFiber.lanes = mergeLanes(sourceFiber.lanes, lane);
+  let alternate = sourceFiber.alternate;
+  if (alternate !== null) {
+    alternate.lanes = mergeLanes(alternate.lanes, lane);
+  }
+  let parent = node.return;
+  while (parent !== null) {
+    parent.childLanes = mergeLanes(parent.childLanes, lane);
+    alternate = parent.alternate;
+    if (alternate !== null) {
+      alternate.childLanes = mergeLanes(alternate.childLanes, lane);
+    }
+    node = parent;
+    parent = node.return;
+  }
+  if (node.tag === HostRoot) {
+    const root: FiberRoot = node.stateNode;
+    return root;
+  }
+  return null;
+}
+
+export function scheduleUpdateOnFiber(
+  root: FiberRoot,
+  fiber: Fiber,
+  lane: number
+) {
+  /** This replace markRootUpdated */
+  root.pendingLanes = mergeLanes(root.pendingLanes, lane);
+}
 
 /**
  * Prepares the reconciler for a new render.

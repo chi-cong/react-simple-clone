@@ -38,6 +38,13 @@ export type Element = {
   props: any;
 };
 
+export type FiberRoot = {
+  containerInfo: any;
+  current: Fiber;
+  finishedWork: Fiber | null;
+  pendingLanes: number;
+};
+
 export const createFiber = (
   tag: number,
   pendingProps: any,
