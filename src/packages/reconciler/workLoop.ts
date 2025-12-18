@@ -1,25 +1,71 @@
-import { Fiber, FiberRoot } from "./fiber";
+import { createWorkInProgress, Fiber, FiberRoot } from "./fiber";
 import { beginWork } from "./beginWork";
 import { HostRoot } from "./workTags";
 
+const rootInProgress = 0;
+
 // The current fiber being processed.
 let workInProgress: Fiber | null = null;
+let workInProgressRoot: FiberRoot | null = null;
+let workInProgressRootRenderLanes = 0;
+let workInProgressRootExistStatus = rootInProgress;
 
 /** from ReactFiberLane */
 function mergeLanes(lane: number, newLane: number) {
   return lane | newLane;
 }
 
-function performWorkSync() {}
+/**
+ * Prepares the reconciler for a new render.
+ * This sets up the initial fiber to begin work on.
+ * @param root The root fiber of the tree to render.
+ */
+export function prepareFreshStack(root: FiberRoot, lane: number) {
+  workInProgressRoot = root;
+  const rootWorkInProgress = createWorkInProgress(root.current, null);
+  workInProgress = rootWorkInProgress;
+  workInProgressRoot = root;
+  workInProgressRootRenderLanes = lane;
+  workInProgressRootExistStatus = rootInProgress;
+
+  // We skipped finishQueueingConcurrentUpdates()
+  // because we apply updates immediately in dispatchSetState.
+
+  return rootWorkInProgress;
+}
+
+function renderRootSync(root: FiberRoot, lane: number) {
+  if (workInProgressRoot !== root || workInProgress === null) {
+    prepareFreshStack(root, lane);
+  }
+
+  let existStatus = workInProgressRootExistStatus;
+
+  try {
+    workLoop();
+    existStatus = workInProgressRootExistStatus;
+  } catch (throwValue) {
+    throw throwValue;
+  }
+  return existStatus;
+}
+
+/**
+ * This is actually performWorkOnRoot in ReactFiberWorkLoop but sync by default
+ */
+function performSyncWorkOnRoot(root: FiberRoot, lane: number) {
+  let existStatus = renderRootSync(root, lane);
+  const finishedWork: Fiber = root.current.alternate as any;
+}
 
 function ensureRootIsScheduled(root: FiberRoot): void {
   /**
    * In the actual react source code, this function does not call
    * performSyncWorkOnRoot, it calls ensureScheduleIsScheduled instead.
-   * But for the sake of simplification, We treat everything as synchronous.
+   * But for the sake of simplicity, We treat everything as synchronous.
    */
 
-  performWorkSync();
+  performSyncWorkOnRoot(root, 1);
 }
 
 export function markUpdateLaneFromFiberToRoot(
@@ -57,15 +103,7 @@ export function scheduleUpdateOnFiber(
 ) {
   /** This replace markRootUpdated */
   root.pendingLanes = mergeLanes(root.pendingLanes, lane);
-}
-
-/**
- * Prepares the reconciler for a new render.
- * This sets up the initial fiber to begin work on.
- * @param root The root fiber of the tree to render.
- */
-export function prepareFreshStack(root: Fiber) {
-  workInProgress = root;
+  ensureRootIsScheduled(root);
 }
 
 /**
