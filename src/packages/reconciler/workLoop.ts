@@ -2,13 +2,14 @@ import { createWorkInProgress, Fiber, FiberRoot } from "./fiber";
 import { beginWork } from "./beginWork";
 import { HostRoot } from "./workTags";
 
-const rootInProgress = 0;
+const RootInProgress = 0;
+const RootCompleted = 5;
 
 // The current fiber being processed.
 let workInProgress: Fiber | null = null;
 let workInProgressRoot: FiberRoot | null = null;
 let workInProgressRootRenderLanes = 0;
-let workInProgressRootExistStatus = rootInProgress;
+let workInProgressRootExistStatus = RootInProgress;
 
 /** from ReactFiberLane */
 function mergeLanes(lane: number, newLane: number) {
@@ -26,7 +27,7 @@ export function prepareFreshStack(root: FiberRoot, lane: number) {
   workInProgress = rootWorkInProgress;
   workInProgressRoot = root;
   workInProgressRootRenderLanes = lane;
-  workInProgressRootExistStatus = rootInProgress;
+  workInProgressRootExistStatus = RootInProgress;
 
   // We skipped finishQueueingConcurrentUpdates()
   // because we apply updates immediately in dispatchSetState.
@@ -50,12 +51,27 @@ function renderRootSync(root: FiberRoot, lane: number) {
   return existStatus;
 }
 
+function commitRoot(root: FiberRoot, finishedWork: Fiber) {
+  if (finishedWork === null) return;
+  root.current = finishedWork;
+}
+
 /**
  * This is actually performWorkOnRoot in ReactFiberWorkLoop but sync by default
  */
 function performSyncWorkOnRoot(root: FiberRoot, lane: number) {
   let existStatus = renderRootSync(root, lane);
   const finishedWork: Fiber = root.current.alternate as any;
+
+  switch (existStatus) {
+    case RootInProgress:
+      throw new Error("Root is not completed");
+    case RootCompleted:
+      break;
+    default:
+      throw new Error("Unknown root exit status.");
+  }
+  commitRoot(root, finishedWork);
 }
 
 function ensureRootIsScheduled(root: FiberRoot): void {

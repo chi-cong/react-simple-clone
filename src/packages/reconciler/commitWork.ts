@@ -1,6 +1,31 @@
-import { Fiber } from "./fiber";
-import { HostComponent, HostText } from "./workTags";
+import { Fiber, FiberRoot } from "./fiber";
+import { FunctionComponent, HostComponent, HostText } from "./workTags";
 import { Placement, Update } from "./fiberFlags";
+
+export function recursivelyTraverseMutationEffects(
+  root: FiberRoot,
+  finishedWork: Fiber
+) {}
+
+export function commitReconciliationEffects(finishedWork: Fiber) {}
+
+export function commitMutationEffect(
+  root: FiberRoot,
+  finishedWork: Fiber,
+  committedLanes: number
+) {
+  const current = finishedWork.alternate;
+  const flags = finishedWork.flags;
+
+  switch (finishedWork.tag) {
+    case FunctionComponent:
+      recursivelyTraverseMutationEffects(root, finishedWork);
+      commitReconciliationEffects(finishedWork);
+      break;
+    case HostComponent:
+      break;
+  }
+}
 
 /**
  * Commits a placement side effect (inserting a node into the DOM).
