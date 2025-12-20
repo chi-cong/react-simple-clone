@@ -1,5 +1,6 @@
 import { Fiber } from "./fiber";
 import { Placement } from "./fiberFlags";
+import { appendChild, insertBefore } from "./hostConfig";
 import { HostComponent, HostRoot } from "./workTags";
 
 function insertOrAppendPlacementNode(
@@ -12,11 +13,20 @@ function insertOrAppendPlacementNode(
   if (isHost) {
     const stateNode = node.stateNode;
     if (before) {
-      parent.insertBefore(stateNode, before);
+      insertBefore(stateNode, stateNode, before);
     } else {
-      parent.appendChild(stateNode);
+      appendChild(parent, stateNode);
     }
-  } else {
+    return;
+  }
+  const child = node.child;
+  if (child !== null) {
+    insertOrAppendPlacementNode(child, before, parent);
+    let letSibling = child.sibling;
+    while (letSibling !== null) {
+      insertOrAppendPlacementNode(letSibling, before, parent);
+      letSibling = letSibling.sibling;
+    }
   }
 }
 
@@ -72,6 +82,12 @@ export function commitPlacement(finishedWork: Fiber) {
   }
 
   const before = getHostSibling(finishedWork);
-  const parent = hostParentFiber!.stateNode;
+  let parent;
+  if (hostParentFiber!.tag === HostComponent) {
+    parent = hostParentFiber!.stateNode;
+  } else {
+    // HostRoot
+    parent = hostParentFiber!.stateNode.containerInfo;
+  }
   insertOrAppendPlacementNode(finishedWork, before, parent);
 }

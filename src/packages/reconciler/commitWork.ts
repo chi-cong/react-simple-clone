@@ -1,19 +1,28 @@
 import { Fiber, FiberRoot } from "./fiber";
-import { FunctionComponent, HostComponent, HostText } from "./workTags";
-import { Placement, Update } from "./fiberFlags";
+import {
+  FunctionComponent,
+  HostComponent,
+  HostRoot,
+  HostText,
+} from "./workTags";
+import { removeChildFromContainer } from "./hostConfig";
 
 export function recursivelyTraverseMutationEffects(
   root: FiberRoot,
-  finishedWork: Fiber
-) {}
+  parentFiber: Fiber
+) {
+  const deletions = parentFiber.deletions;
+  if (deletions !== null) {
+    for (let i = 0; i < deletions.length; i++) {
+      const childToDelete = deletions[i];
+      commitDeletionEffects(root, parentFiber, childToDelete!);
+    }
+  }
+}
 
 export function commitReconciliationEffects(finishedWork: Fiber) {}
 
-export function commitMutationEffect(
-  root: FiberRoot,
-  finishedWork: Fiber,
-  committedLanes: number
-) {
+export function commitMutationEffect(root: FiberRoot, finishedWork: Fiber) {
   const current = finishedWork.alternate;
   const flags = finishedWork.flags;
 
@@ -28,18 +37,6 @@ export function commitMutationEffect(
 }
 
 /**
- * Commits a placement side effect (inserting a node into the DOM).
- * @param finishedWork The fiber with the Placement flag.
- */
-export function commitPlacement(finishedWork: Fiber) {
-  // TODO: Implement DOM insertion logic.
-  // 1. Find the parent DOM node.
-  // 2. Find the correct sibling to insert before.
-  // 3. Insert the node (finishedWork.stateNode).
-  console.log("Committing placement for", finishedWork.type);
-}
-
-/**
  * Commits an update side effect (e.g., changing props on a DOM node).
  * @param finishedWork The fiber with the Update flag.
  */
@@ -50,13 +47,77 @@ export function commitWork(finishedWork: Fiber) {
   console.log("Committing update for", finishedWork.type);
 }
 
+let hostParent: Element | null = null;
+
+function recursivelyTraverseDeletionEffects(
+  finishedRoot: FiberRoot,
+  nearestMountedAncestor: Fiber,
+  parent: Fiber
+) {
+  let child = parent.child;
+  while (child !== null) {
+    commitDeletionEffectsOnFiber(finishedRoot, nearestMountedAncestor, child);
+    child = child.sibling;
+  }
+}
+
+function commitDeletionEffectsOnFiber(
+  finishedRoot: FiberRoot,
+  nearestMountedAncestor: Fiber,
+  deletedFiber: Fiber
+) {
+  switch (deletedFiber.tag) {
+    case HostText:
+      // TODO: When implementing useEffect, we must recurse here
+      // even if we are a Host node to run cleanups of children.
+      // We would set hostParent = null before recursing to avoid
+      // multiple removeChild calls.
+
+      if (hostParent !== null)
+        removeChildFromContainer(hostParent, deletedFiber.stateNode);
+      break;
+    case FunctionComponent:
+      recursivelyTraverseDeletionEffects(
+        finishedRoot,
+        nearestMountedAncestor,
+        deletedFiber
+      );
+      commitReconciliationEffects(deletedFiber);
+      break;
+    default:
+      recursivelyTraverseDeletionEffects(
+        finishedRoot,
+        nearestMountedAncestor,
+        deletedFiber
+      );
+      break;
+  }
+}
+
 /**
  * Commits a deletion side effect (removing a node from the DOM).
  * @param fiberToDelete The fiber to be deleted.
  */
-export function commitDeletion(fiberToDelete: Fiber) {
-  // TODO: Implement DOM removal logic.
-  // 1. Find the parent DOM node.
-  // 2. Remove the child node (fiberToDelete.stateNode).
-  console.log("Committing deletion for", fiberToDelete.type);
+export function commitDeletionEffects(
+  root: FiberRoot,
+  returnFiber: Fiber,
+  deletedFiber: Fiber
+) {
+  let parent: Fiber | null = returnFiber;
+  while (parent !== null) {
+    switch (parent.tag) {
+      case HostComponent:
+        hostParent = parent.stateNode;
+        break;
+      case HostRoot:
+        hostParent = parent.stateNode.containerInfo;
+        break;
+    }
+    parent = parent.return;
+  }
+  if (hostParent === null) {
+    throw new Error("Bug: No host parent found");
+  }
+
+  commitDeletionEffectsOnFiber(root, returnFiber, deletedFiber);
 }
