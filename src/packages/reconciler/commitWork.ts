@@ -5,7 +5,13 @@ import {
   HostRoot,
   HostText,
 } from "./workTags";
-import { removeChildFromContainer } from "./hostConfig";
+import {
+  commitTextUpdate,
+  commitUpdate,
+  removeChildFromContainer,
+} from "./hostConfig";
+import { Placement, Update } from "./fiberFlags";
+import { commitPlacement } from "./commitHostEffects";
 
 export function recursivelyTraverseMutationEffects(
   root: FiberRoot,
@@ -18,11 +24,25 @@ export function recursivelyTraverseMutationEffects(
       commitDeletionEffects(root, parentFiber, childToDelete!);
     }
   }
+
+  let child = parentFiber.child;
+  while (child !== null) {
+    commitMutationEffects(root, child);
+    child = child.sibling;
+  }
 }
 
-export function commitReconciliationEffects(finishedWork: Fiber) {}
+// TODO: implement this
+export function commitReconciliationEffects(finishedWork: Fiber) {
+  const flags = finishedWork.flags;
+  if (flags && Placement) {
+    commitPlacement(finishedWork); // or commitHostPlacement
+    finishedWork.flags &= ~Placement;
+  }
+}
 
-export function commitMutationEffect(root: FiberRoot, finishedWork: Fiber) {
+// This combined with commitMutationEffectsOnFiber
+export function commitMutationEffects(root: FiberRoot, finishedWork: Fiber) {
   const current = finishedWork.alternate;
   const flags = finishedWork.flags;
 
@@ -32,7 +52,30 @@ export function commitMutationEffect(root: FiberRoot, finishedWork: Fiber) {
       commitReconciliationEffects(finishedWork);
       break;
     case HostComponent:
+      recursivelyTraverseMutationEffects(root, finishedWork);
+      commitReconciliationEffects(finishedWork);
+      if (flags & Update) {
+        const instance = finishedWork.stateNode;
+        if (instance !== null) {
+          const newProps = finishedWork.memoizedProps;
+          const oldProps = current !== null ? current.memoizedProps : newProps;
+          commitUpdate(instance, newProps, oldProps);
+        }
+      }
       break;
+    case HostText:
+      recursivelyTraverseMutationEffects(root, finishedWork);
+      commitReconciliationEffects(finishedWork);
+      if (flags & Update) {
+        const newText: string = finishedWork.memoizedProps;
+        commitTextUpdate(finishedWork.stateNode, newText);
+      }
+      break;
+    case HostRoot:
+      recursivelyTraverseMutationEffects(root, finishedWork);
+      commitReconciliationEffects(finishedWork);
+      break;
+    default:
   }
 }
 
