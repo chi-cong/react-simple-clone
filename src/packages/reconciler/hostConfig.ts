@@ -81,10 +81,36 @@ export function commitUpdate(dom: Element, nextProps: any, prevProps: any) {
   }
 }
 
+export function finalizeInitialChildren(
+  domElement: Element,
+  type: string,
+  props: any
+) {
+  commitUpdate(domElement, props, {});
+
+  // If there are actions that only happens after
+  // the element being attached to the DOM, return false
+  switch (type) {
+    case "button":
+    case "input":
+    case "select":
+    case "textarea":
+      return !!props.autoFocus;
+    case "img":
+      return true;
+    default:
+      return false;
+  }
+}
+
 export function createInstance(type: string, newProps: any) {
   const dom = document.createElement(type);
   commitUpdate(dom, newProps, {});
   return dom;
+}
+
+export function createTextInstance(newText: string) {
+  return document.createTextNode(newText);
 }
 
 export const supportsMutation = true;

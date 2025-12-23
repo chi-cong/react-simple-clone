@@ -1,9 +1,17 @@
 import { Fiber } from "./fiber";
 import { NoFlags, Update } from "./fiberFlags";
-import { appendChild, createInstance, supportsMutation } from "./hostConfig";
-import { FunctionComponent, HostComponent, HostText } from "./workTags";
-
-export const completeUnitOfWork = (unitOfWork: Fiber) => {};
+import {
+  appendChild,
+  createInstance,
+  createTextInstance,
+  finalizeInitialChildren,
+} from "./hostConfig";
+import {
+  FunctionComponent,
+  HostComponent,
+  HostRoot,
+  HostText,
+} from "./workTags";
 
 export type Type = string;
 export type Props = {
@@ -114,7 +122,7 @@ export const completeWork = (current: Fiber | null, workInProgress: Fiber) => {
   switch (workInProgress.tag) {
     case FunctionComponent:
       bubbleProperties(workInProgress);
-      break;
+      return null;
     case HostComponent:
       const type = workInProgress.type;
       if (current !== null && workInProgress.stateNode !== null) {
@@ -125,8 +133,24 @@ export const completeWork = (current: Fiber | null, workInProgress: Fiber) => {
           return;
         }
         const instance = createInstance(type, newProps);
+        appendAllChildren(instance, workInProgress);
         workInProgress.stateNode = instance;
+        if (finalizeInitialChildren(instance, type, newProps))
+          workInProgress.flags |= Update;
       }
-    default:
+      bubbleProperties(workInProgress);
+      return null;
+    case HostText:
+      const newText = newProps;
+      if (current !== null && workInProgress.stateNode !== null) {
+        const oldText = current.memoizedProps;
+        if (newText !== oldText) workInProgress.flags |= Update;
+      } else {
+        workInProgress.stateNode = createTextInstance(newText);
+      }
+      bubbleProperties(workInProgress);
+      return null;
+    case HostRoot:
+      bubbleProperties(workInProgress);
   }
 };

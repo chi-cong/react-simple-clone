@@ -2,6 +2,7 @@ import { createWorkInProgress, Fiber, FiberRoot } from "./fiber";
 import { beginWork } from "./beginWork";
 import { HostRoot } from "./workTags";
 import { commitMutationEffects } from "./commitWork";
+import { completeWork } from "./completeWork";
 
 const RootInProgress = 0;
 const RootCompleted = 5;
@@ -9,8 +10,7 @@ const RootCompleted = 5;
 // The current fiber being processed.
 let workInProgress: Fiber | null = null;
 let workInProgressRoot: FiberRoot | null = null;
-let workInProgressRootRenderLanes = 0;
-let workInProgressRootExistStatus = RootInProgress;
+let workInProgressRootExitStatus = RootInProgress;
 
 /** from ReactFiberLane */
 function mergeLanes(lane: number, newLane: number) {
@@ -22,13 +22,12 @@ function mergeLanes(lane: number, newLane: number) {
  * This sets up the initial fiber to begin work on.
  * @param root The root fiber of the tree to render.
  */
-export function prepareFreshStack(root: FiberRoot, lane: number) {
+export function prepareFreshStack(root: FiberRoot) {
   workInProgressRoot = root;
   const rootWorkInProgress = createWorkInProgress(root.current, null);
   workInProgress = rootWorkInProgress;
   workInProgressRoot = root;
-  workInProgressRootRenderLanes = lane;
-  workInProgressRootExistStatus = RootInProgress;
+  workInProgressRootExitStatus = RootInProgress;
 
   // We skipped finishQueueingConcurrentUpdates()
   // because we apply updates immediately in dispatchSetState.
@@ -36,20 +35,20 @@ export function prepareFreshStack(root: FiberRoot, lane: number) {
   return rootWorkInProgress;
 }
 
-function renderRootSync(root: FiberRoot, lane: number) {
+function renderRootSync(root: FiberRoot) {
   if (workInProgressRoot !== root || workInProgress === null) {
-    prepareFreshStack(root, lane);
+    prepareFreshStack(root);
   }
 
-  let existStatus = workInProgressRootExistStatus;
+  let exitStatus = workInProgressRootExitStatus;
 
   try {
     workLoop();
-    existStatus = workInProgressRootExistStatus;
+    exitStatus = workInProgressRootExitStatus;
   } catch (throwValue) {
     throw throwValue;
   }
-  return existStatus;
+  return exitStatus;
 }
 
 function commitRoot(root: FiberRoot, finishedWork: Fiber) {
@@ -64,11 +63,11 @@ function commitRoot(root: FiberRoot, finishedWork: Fiber) {
 /**
  * This is actually performWorkOnRoot in ReactFiberWorkLoop but sync by default
  */
-function performSyncWorkOnRoot(root: FiberRoot, lane: number) {
-  let existStatus = renderRootSync(root, lane);
+function performSyncWorkOnRoot(root: FiberRoot) {
+  let exitStatus = renderRootSync(root);
   const finishedWork: Fiber = root.current.alternate as any;
 
-  switch (existStatus) {
+  switch (exitStatus) {
     case RootInProgress:
       throw new Error("Root is not completed");
     case RootCompleted:
@@ -86,7 +85,7 @@ function ensureRootIsScheduled(root: FiberRoot): void {
    * But for the sake of simplicity, We treat everything as synchronous.
    */
 
-  performSyncWorkOnRoot(root, 1);
+  performSyncWorkOnRoot(root);
 }
 
 export function markUpdateLaneFromFiberToRoot(
@@ -150,7 +149,7 @@ function performUnitOfWork(unitOfWork: Fiber) {
 
   // We've finished the beginWork phase for this fiber.
   // Now, set its pending props to null as they've been processed.
-  unitOfWork.pendingProps = unitOfWork.memoizedProps;
+  unitOfWork.memoizedProps = unitOfWork.pendingProps;
 
   if (next === null) {
     // If there's no child, we can start the "complete" phase for this fiber.
@@ -162,6 +161,25 @@ function performUnitOfWork(unitOfWork: Fiber) {
   }
 }
 
-// TODO: Implement `completeUnitOfWork` which will traverse up the tree,
-// calling `completeWork` and handling siblings.
-function completeUnitOfWork(unitOfWork: Fiber) {}
+function completeUnitOfWork(unitOfWork: Fiber) {
+  let completedWork = unitOfWork;
+  do {
+    const current = completedWork.alternate;
+    const returnFiber = completedWork.return;
+    completeWork(current, completedWork);
+
+    const siblingFiber = completedWork.sibling;
+    if (siblingFiber !== null) {
+      workInProgress = siblingFiber;
+      return;
+    }
+
+    //@ts-ignore
+    completedWork = returnFiber;
+    workInProgress = returnFiber;
+  } while (completedWork !== null);
+
+  if (workInProgressRootExitStatus === RootInProgress) {
+    workInProgressRootExitStatus = RootCompleted;
+  }
+}
