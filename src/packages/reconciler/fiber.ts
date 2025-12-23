@@ -1,5 +1,5 @@
 import { NoFlags } from "./fiberFlags";
-import { FunctionComponent, HostComponent } from "./workTags";
+import { FunctionComponent } from "./workTags";
 
 export type Fiber = {
   tag: number;
@@ -29,6 +29,7 @@ export type Fiber = {
   flags: number;
   lanes: number;
   childLanes: number;
+  subtreeFlags: number;
 };
 
 export type Element = {
@@ -76,9 +77,10 @@ export const createFiber = (
     childExpirationTime: 0,
     alternate: null,
     deletions: null,
-    flags: 0,
+    flags: NoFlags,
     lanes: 1,
     childLanes: 0,
+    subtreeFlags: NoFlags,
   };
 };
 

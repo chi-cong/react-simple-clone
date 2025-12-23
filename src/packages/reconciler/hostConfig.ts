@@ -81,4 +81,10 @@ export function commitUpdate(dom: Element, nextProps: any, prevProps: any) {
   }
 }
 
+export function createInstance(type: string, newProps: any) {
+  const dom = document.createElement(type);
+  commitUpdate(dom, newProps, {});
+  return dom;
+}
+
 export const supportsMutation = true;

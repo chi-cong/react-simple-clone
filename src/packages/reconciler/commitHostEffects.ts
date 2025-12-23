@@ -1,7 +1,7 @@
 import { Fiber } from "./fiber";
 import { Placement } from "./fiberFlags";
 import { appendChild, insertBefore } from "./hostConfig";
-import { HostComponent, HostRoot } from "./workTags";
+import { HostComponent, HostRoot, HostText } from "./workTags";
 
 function insertOrAppendPlacementNode(
   node: Fiber,
@@ -9,11 +9,11 @@ function insertOrAppendPlacementNode(
   parent: Element
 ) {
   const { tag } = node;
-  const isHost = tag === HostComponent || tag === HostRoot;
+  const isHost = tag === HostComponent || tag === HostText;
   if (isHost) {
     const stateNode = node.stateNode;
     if (before) {
-      insertBefore(stateNode, stateNode, before);
+      insertBefore(parent, stateNode, before);
     } else {
       appendChild(parent, stateNode);
     }
@@ -44,7 +44,7 @@ function getHostSibling(fiber: Fiber) {
     node.sibling.return = node.return;
     node = node.sibling;
 
-    while (node.tag !== HostComponent && node.tag !== HostRoot) {
+    while (node.tag !== HostComponent && node.tag !== HostText) {
       if (node.flags & Placement) {
         continue siblings;
       }

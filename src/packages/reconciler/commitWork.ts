@@ -10,7 +10,7 @@ import {
   commitUpdate,
   removeChildFromContainer,
 } from "./hostConfig";
-import { Placement, Update } from "./fiberFlags";
+import { MutationMask, NoFlags, Placement, Update } from "./fiberFlags";
 import { commitPlacement } from "./commitHostEffects";
 
 export function recursivelyTraverseMutationEffects(
@@ -25,6 +25,8 @@ export function recursivelyTraverseMutationEffects(
     }
   }
 
+  if ((parentFiber.subtreeFlags & MutationMask) === NoFlags) return;
+
   let child = parentFiber.child;
   while (child !== null) {
     commitMutationEffects(root, child);
@@ -32,10 +34,9 @@ export function recursivelyTraverseMutationEffects(
   }
 }
 
-// TODO: implement this
-export function commitReconciliationEffects(finishedWork: Fiber) {
+function commitReconciliationEffects(finishedWork: Fiber) {
   const flags = finishedWork.flags;
-  if (flags && Placement) {
+  if (flags & Placement) {
     commitPlacement(finishedWork); // or commitHostPlacement
     finishedWork.flags &= ~Placement;
   }

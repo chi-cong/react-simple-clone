@@ -1,9 +1,10 @@
 import { Fiber } from "./fiber";
+import { NoFlags, Update } from "./fiberFlags";
+import { appendChild, createInstance, supportsMutation } from "./hostConfig";
+import { FunctionComponent, HostComponent, HostText } from "./workTags";
 
 export const completeUnitOfWork = (unitOfWork: Fiber) => {};
 
-// these config can be found in ReactFiberConfigDOM.js
-export const supportsMutation = true;
 export type Type = string;
 export type Props = {
   autoFocus?: boolean;
@@ -35,24 +36,97 @@ export type Props = {
   checked?: boolean;
   defaultChecked?: boolean;
   multiple?: boolean;
-  src?: string | Blob | MediaSource | MediaStream; // TODO: Response
+  src?: string | Blob | MediaSource | MediaStream;
   srcSet?: string;
   loading?: "eager" | "lazy";
   onLoad?: (event: any) => void;
 };
 
 export function updateHostComponent(
-  current: Fiber | null,
+  current: Fiber,
   workInProgress: Fiber,
   type: Type,
   newProps: Props
 ) {
-  // mimic source code, supportsMutation config is true for DOM
-  if (supportsMutation) {
+  const oldProps = current.memoizedProps;
+
+  // In mutation mode, this is sufficient for a bailout because
+  // we won't touch this node even if children changed.
+  if (oldProps === newProps) return;
+  workInProgress.flags |= Update;
+}
+
+function bubbleProperties(completedWork: Fiber) {
+  const didBailout =
+    completedWork.alternate !== null &&
+    completedWork.alternate.child === completedWork.child;
+  let subtreeFlags = NoFlags;
+  if (didBailout) {
+    let child = completedWork.child;
+    while (child !== null) {
+      subtreeFlags |= child.subtreeFlags;
+      subtreeFlags |= child.flags;
+
+      child.return = completedWork;
+      child = child.sibling;
+    }
+    completedWork.subtreeFlags |= subtreeFlags;
+  } else {
+    let child = completedWork.child;
+    while (child !== null) {
+      subtreeFlags |= child.subtreeFlags;
+      subtreeFlags |= child.flags;
+
+      child.return = completedWork;
+      child = child.sibling;
+    }
+    completedWork.subtreeFlags |= subtreeFlags;
   }
-  return workInProgress.child;
+}
+
+function appendAllChildren(parent: Element, workInProgress: Fiber) {
+  let node = workInProgress.child;
+  while (node !== null) {
+    if (node.tag === HostComponent || node.tag === HostText) {
+      // append when founding physical node
+
+      // React use appendInitialChildren, but for DOM it's identical to appendChild
+      appendChild(parent, node.stateNode);
+    } else if (node.child !== null) {
+      // found a component, drill down to find its physical children.
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    if (node === workInProgress) return;
+
+    while (node.sibling === null) {
+      if (node.return === null || node.return === workInProgress) return;
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
+  }
 }
 
 export const completeWork = (current: Fiber | null, workInProgress: Fiber) => {
   const newProps = workInProgress.pendingProps;
+  switch (workInProgress.tag) {
+    case FunctionComponent:
+      bubbleProperties(workInProgress);
+      break;
+    case HostComponent:
+      const type = workInProgress.type;
+      if (current !== null && workInProgress.stateNode !== null) {
+        updateHostComponent(current, workInProgress, type, newProps);
+      } else {
+        if (!newProps) {
+          bubbleProperties(workInProgress);
+          return;
+        }
+        const instance = createInstance(type, newProps);
+        workInProgress.stateNode = instance;
+      }
+    default:
+  }
 };

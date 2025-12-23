@@ -1,6 +1,7 @@
 import { createWorkInProgress, Fiber, FiberRoot } from "./fiber";
 import { beginWork } from "./beginWork";
 import { HostRoot } from "./workTags";
+import { commitMutationEffects } from "./commitWork";
 
 const RootInProgress = 0;
 const RootCompleted = 5;
@@ -53,7 +54,11 @@ function renderRootSync(root: FiberRoot, lane: number) {
 
 function commitRoot(root: FiberRoot, finishedWork: Fiber) {
   if (finishedWork === null) return;
+  if (finishedWork === root.current)
+    throw new Error("Cannot commit the same tree as before.");
+  commitMutationEffects(root, finishedWork);
   root.current = finishedWork;
+  root.finishedWork = null;
 }
 
 /**
