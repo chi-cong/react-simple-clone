@@ -8,6 +8,7 @@ import {
 import { reconcileChildFibers } from "./childFiber";
 import { renderWithHooks } from "./fiberHooks";
 import { PerformedWork } from "./fiberFlags";
+import { processUpdateQueue } from "./classUpdateQueue";
 
 /**
  * This is the "begin" phase of a fiber. It's responsible for:
@@ -46,10 +47,15 @@ export const beginWork = (
 };
 
 function updateHostRoot(current: Fiber | null, workInProgress: Fiber) {
-  // For the root, we process the update queue to get the new state (the root element).
-  const newChildren = workInProgress.memoizedState.element;
+  const nextProps = workInProgress.pendingProps;
+
+  processUpdateQueue(workInProgress, nextProps, null, 1);
+
+  const nextState = workInProgress.memoizedState;
+  const nextChildren = nextState.element;
+
   // Then we reconcile the children.
-  reconcileChildren(current, workInProgress, newChildren);
+  reconcileChildren(current, workInProgress, nextChildren);
   return workInProgress.child;
 }
 
