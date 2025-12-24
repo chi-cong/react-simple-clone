@@ -7,7 +7,7 @@ export function createContainer(containerInfo: Element) {
   return createFiberRoot(containerInfo);
 }
 
-export function updateContainter(element: any, container: FiberRoot) {
+export function updateContainer(element: any, container: FiberRoot) {
   const current = container.current;
 
   const lane = 1;

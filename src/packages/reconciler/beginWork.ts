@@ -49,7 +49,7 @@ export const beginWork = (
 function updateHostRoot(current: Fiber | null, workInProgress: Fiber) {
   const nextProps = workInProgress.pendingProps;
 
-  processUpdateQueue(workInProgress, nextProps, null, 1);
+  processUpdateQueue(workInProgress);
 
   const nextState = workInProgress.memoizedState;
   const nextChildren = nextState.element;

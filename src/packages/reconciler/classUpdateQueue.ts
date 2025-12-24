@@ -71,12 +71,7 @@ export function initializeUpdateQueue<State>(fiber: Fiber): void {
   fiber.updateQueue = queue;
 }
 
-export function processUpdateQueue<State>(
-  workInProgress: Fiber,
-  props: any,
-  instance: any,
-  renderLane: number
-) {
+export function processUpdateQueue<State>(workInProgress: Fiber) {
   const queue: UpdateQueue<State> = workInProgress.updateQueue;
   let pendingQueue = queue.shared.pending;
   if (pendingQueue !== null) {
