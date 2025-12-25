@@ -81,6 +81,7 @@ export function processUpdateQueue<State>(workInProgress: Fiber) {
     // and last so that it's non-circular.
     const lastPendingUpdate = pendingQueue;
     const firstPendingUpdate = lastPendingUpdate.next;
+    lastPendingUpdate.next = null;
 
     let newState = queue.baseState;
     let update = firstPendingUpdate;
@@ -98,7 +99,6 @@ export function processUpdateQueue<State>(workInProgress: Fiber) {
       update = update.next;
     }
 
-    lastPendingUpdate.next = null;
     workInProgress.memoizedState = newState;
     queue.baseState = newState;
   }

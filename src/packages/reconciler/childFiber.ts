@@ -338,6 +338,7 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
         } else {
           previousNewFiber.sibling = newFiber;
         }
+        previousNewFiber = newFiber;
       }
 
       return resultingFirstChild;
