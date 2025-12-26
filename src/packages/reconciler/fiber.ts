@@ -107,7 +107,6 @@ export const createWorkInProgress = (
 ): Fiber => {
   let workInProgress = current.alternate;
   if (workInProgress === null) {
-    // mount
     workInProgress = createFiber(
       current.tag,
       pendingProps,
@@ -125,9 +124,6 @@ export const createWorkInProgress = (
     workInProgress.pendingProps = pendingProps;
 
     workInProgress.effectTag = 0;
-    workInProgress.nextEffect = null;
-    workInProgress.firstEffect = null;
-    workInProgress.lastEffect = null;
     workInProgress.flags = NoFlags;
     workInProgress.deletions = null;
   }

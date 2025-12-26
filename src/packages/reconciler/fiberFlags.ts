@@ -7,4 +7,4 @@ export const Placement = /*       */ 0b0000000000000000000000000000010;
 export const ChildDeletion = /*   */ 0b0000000000000000000000000010000;
 export const Update = /*          */ 0b0000000000000000000000000000100;
 
-export const MutationMask = Placement;
+export const MutationMask = Placement | ChildDeletion | Update;

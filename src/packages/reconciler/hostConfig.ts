@@ -25,22 +25,34 @@ const isProperty = (key: string) =>
   !isEvent(key) && !isStyle(key) && !isChildren(key);
 
 export function commitUpdate(dom: Element, nextProps: any, prevProps: any) {
-  // 1. Remove old or changed event listeners
+  // Get or create a map to store the actual attached listeners
+  const domAny = dom as any;
+  if (!domAny.__eventListeners) {
+    domAny.__eventListeners = {};
+  }
+  const listeners = domAny.__eventListeners;
+
+  // 1. Remove old event listeners using the ACTUALLY attached reference
   Object.keys(prevProps)
     .filter(isEvent)
     .filter((key) => !(key in nextProps) || prevProps[key] !== nextProps[key])
     .forEach((name) => {
       const eventType = name.toLowerCase().substring(2);
-      dom.removeEventListener(eventType, prevProps[name]);
+      const actualListener = listeners[name];
+      if (actualListener) {
+        dom.removeEventListener(eventType, actualListener);
+        delete listeners[name];
+      }
     });
 
-  // 2. Add new event listeners
+  // 2. Add new event listeners and store the reference
   Object.keys(nextProps)
     .filter(isEvent)
     .filter((key) => prevProps[key] !== nextProps[key])
     .forEach((name) => {
       const eventType = name.toLowerCase().substring(2);
       dom.addEventListener(eventType, nextProps[name]);
+      listeners[name] = nextProps[name]; // Store the actual attached reference
     });
 
   // 3. Remove deleted properties

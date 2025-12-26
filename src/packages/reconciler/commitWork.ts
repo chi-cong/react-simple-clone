@@ -25,12 +25,12 @@ export function recursivelyTraverseMutationEffects(
     }
   }
 
-  if ((parentFiber.subtreeFlags & MutationMask) === NoFlags) return;
-
-  let child = parentFiber.child;
-  while (child !== null) {
-    commitMutationEffects(root, child);
-    child = child.sibling;
+  if (parentFiber.subtreeFlags & MutationMask) {
+    let child = parentFiber.child;
+    while (child !== null) {
+      commitMutationEffects(root, child);
+      child = child.sibling;
+    }
   }
 }
 
