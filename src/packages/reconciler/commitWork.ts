@@ -80,17 +80,6 @@ export function commitMutationEffects(root: FiberRoot, finishedWork: Fiber) {
   }
 }
 
-/**
- * Commits an update side effect (e.g., changing props on a DOM node).
- * @param finishedWork The fiber with the Update flag.
- */
-export function commitWork(finishedWork: Fiber) {
-  // TODO: Implement DOM update logic.
-  // 1. Compare old and new props.
-  // 2. Apply changes to the DOM node (finishedWork.stateNode).
-  console.log("Committing update for", finishedWork.type);
-}
-
 let hostParent: Element | null = null;
 
 function recursivelyTraverseDeletionEffects(
@@ -117,6 +106,10 @@ function commitDeletionEffectsOnFiber(
       // We would set hostParent = null before recursing to avoid
       // multiple removeChild calls.
 
+      if (hostParent !== null)
+        removeChildFromContainer(hostParent, deletedFiber.stateNode);
+      break;
+    case HostComponent:
       if (hostParent !== null)
         removeChildFromContainer(hostParent, deletedFiber.stateNode);
       break;
@@ -148,14 +141,14 @@ export function commitDeletionEffects(
   deletedFiber: Fiber
 ) {
   let parent: Fiber | null = returnFiber;
-  while (parent !== null) {
+  findParent: while (parent !== null) {
     switch (parent.tag) {
       case HostComponent:
         hostParent = parent.stateNode;
-        break;
+        break findParent;
       case HostRoot:
         hostParent = parent.stateNode.containerInfo;
-        break;
+        break findParent;
     }
     parent = parent.return;
   }

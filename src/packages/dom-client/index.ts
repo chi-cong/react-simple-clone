@@ -2,6 +2,7 @@ import {
   createContainer,
   updateContainer,
 } from "../reconciler/fiberReconciler";
+import SharedInternals from "../reconciler/sharedInternals";
 
 export function createRoot(container: HTMLElement) {
   const root = createContainer(container);
@@ -22,4 +23,10 @@ export const RSC = {
       },
     };
   },
+};
+
+export const useState = (
+  initialState: (() => any) | any
+): [any, (action: any) => void] => {
+  return SharedInternals.Hook.useState(initialState);
 };

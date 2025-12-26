@@ -1,29 +1,24 @@
-import { RSC, createRoot } from "../packages/dom-client/index";
+import { RSC, createRoot, useState } from "../packages/dom-client/index";
 
-const container = document.getElementById("root");
-const root = createRoot(container!);
+const root = createRoot(document.getElementById("root")!);
 
-const element = (
-  <div className=''>
-    <h1 style={{ color: "red" }}>Hello World 2</h1>
-    <h1 style={{ color: "red" }}>Hello World 2</h1>
-  </div>
-);
-root.render(element);
+const Button = (props: any) => {
+  return <button onClick={props.onClick}>{props.children}</button>;
+};
 
 const App = () => {
+  const [count, setCount] = useState(() => 1 + 1);
+  const handleClick = () => {
+    setCount((count: number) => count + 1);
+  };
+
+  console.log(count);
+
   return (
     <div>
-      <h1>Hello World</h1>
+      <div className=''>Count: {count}</div>
+      <Button onClick={handleClick}>Click Me!</Button>
     </div>
   );
 };
-
-const multiChildElement = (
-  <div className=''>
-    <span>child 1</span>
-    <span>child 2</span>
-  </div>
-);
-console.log(<App />);
-console.log(multiChildElement);
+root.render(<App />);

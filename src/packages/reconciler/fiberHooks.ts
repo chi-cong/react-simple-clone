@@ -36,6 +36,7 @@ export type BasicStateAction<S> = ((state: S) => S) | S;
 let currentlyRenderingFiber: Fiber | null = null;
 
 let workInProgressHook: Hook | null = null;
+let currentHook: Hook | null = null;
 
 function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
   return typeof action === "function"
@@ -49,13 +50,22 @@ export function renderWithHooks<Props>(
   Component: (p: Props) => any,
   props: Props
 ) {
+  currentlyRenderingFiber = workInProgress;
+
   workInProgress.memoizedState = null;
   workInProgress.updateQueue = null;
 
-  SharedInternals.Hook =
-    current === null || current.memoizedState === null ? "" : "";
+  workInProgressHook = null;
+  currentHook = null;
 
-  return Component(props);
+  SharedInternals.Hook =
+    current === null || current.memoizedState === null
+      ? HookDispatcherOnMount
+      : HookDispatcherOnUpdate;
+
+  let children = Component(props);
+
+  return children;
 }
 
 function mountWorkInProgress(): Hook {
@@ -131,6 +141,76 @@ function mountState<S>(initialState: (() => S) | S) {
   return [hook.memoizedState, dispatch];
 }
 
+function updateWorkInProgressHook() {
+  let nextCurrentHook: Hook | null = null;
+  if (currentHook === null) {
+    // first hook in the component
+    const current = currentlyRenderingFiber!.alternate;
+    if (current !== null) {
+      nextCurrentHook = current.memoizedState;
+    } else {
+      nextCurrentHook = null;
+    }
+  } else {
+    // next hook in the component
+    nextCurrentHook = currentHook.next;
+  }
+
+  if (nextCurrentHook === null) {
+    throw new Error("Rendered more hooks than during the previous render.");
+  }
+  currentHook = nextCurrentHook;
+
+  const newHook: Hook = {
+    memoizedState: currentHook.memoizedState,
+    baseState: currentHook.baseState,
+    baseQueue: currentHook.baseQueue,
+    queue: currentHook.queue,
+    next: null,
+  };
+
+  if (workInProgressHook === null) {
+    // This is the first hook in the list.
+    currentlyRenderingFiber!.memoizedState = workInProgressHook = newHook;
+  } else {
+    // append to the end of the list
+    workInProgressHook = workInProgressHook.next = newHook;
+  }
+
+  return workInProgressHook;
+}
+
+function updateState() {
+  const hook = updateWorkInProgressHook();
+
+  const queue = hook.queue;
+  const pending = queue.pending;
+
+  if (pending !== null) {
+    queue.pending = null;
+
+    const lastPendingUpdate = pending;
+    const firstPendingUpdate = lastPendingUpdate.next;
+    lastPendingUpdate!.next = null;
+
+    let newState = hook.memoizedState;
+    let update = firstPendingUpdate;
+    while (update !== null) {
+      const action = update.action;
+      newState = basicStateReducer(newState, action);
+      update = update.next;
+    }
+    hook.memoizedState = newState;
+    hook.baseState = newState;
+  }
+
+  return [hook.memoizedState, queue.dispatch];
+}
+
 const HookDispatcherOnMount = {
   useState: mountState,
+};
+
+const HookDispatcherOnUpdate = {
+  useState: updateState,
 };

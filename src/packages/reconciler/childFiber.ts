@@ -241,6 +241,7 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
         if (elementType === element.type) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, element.props);
+          existing.return = returnFiber;
           return existing;
         }
         deleteRemainingChildren(returnFiber, child);
@@ -396,6 +397,14 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
     currentFirstChild: Fiber | null,
     newChild: any
   ): Fiber | null {
+    if (Array.isArray(newChild)) {
+      const firstChild = reconcileChildrenArray(
+        returnFiber,
+        currentFirstChild,
+        newChild
+      );
+      return firstChild;
+    }
     if (typeof newChild === "object" && newChild !== null) {
       const firstChild = placeSingleChild(
         reconcileSingleElement(returnFiber, currentFirstChild, newChild)
@@ -409,14 +418,6 @@ export const createChildReconciler = (shouldTrackSideEffects: boolean) => {
     ) {
       const firstChild = placeSingleChild(
         reconcileSingleTextNode(returnFiber, currentFirstChild, "" + newChild)
-      );
-      return firstChild;
-    }
-    if (Array.isArray(newChild)) {
-      const firstChild = reconcileChildrenArray(
-        returnFiber,
-        currentFirstChild,
-        newChild
       );
       return firstChild;
     }

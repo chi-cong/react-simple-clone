@@ -96,6 +96,7 @@ export const createFiberFromElement = (
   }
 
   const fiber = createFiber(fiberTag, element.props, element.key, mode);
+  fiber.elementType = element.type;
   fiber.type = element.type;
   return fiber;
 };
