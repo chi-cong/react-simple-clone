@@ -67,6 +67,10 @@ if (fs.existsSync(distDir)) {
   console.log("Adding .js extensions to imports in dist...");
   addExtensionsToImports(distDir);
   console.log("Done.");
+
+  // Touch a trigger file to signal browser-sync that processing is complete
+  const triggerFile = path.join(distDir, ".reload-trigger");
+  fs.writeFileSync(triggerFile, Date.now().toString());
 } else {
   console.error("dist directory not found. Run build first.");
   process.exit(1);
