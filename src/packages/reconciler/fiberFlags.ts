@@ -9,3 +9,4 @@ export const Update = /*          */ 0b0000000000000000000000000000100;
 export const Passive = /*         */ 0b0000000000000000000100000000000;
 
 export const MutationMask = Placement | ChildDeletion | Update;
+export const PassiveMask = Passive | ChildDeletion;

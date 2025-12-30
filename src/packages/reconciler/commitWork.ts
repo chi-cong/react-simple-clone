@@ -10,8 +10,22 @@ import {
   commitUpdate,
   removeChildFromContainer,
 } from "./hostConfig";
-import { MutationMask, NoFlags, Placement, Update } from "./fiberFlags";
+import {
+  ChildDeletion,
+  MutationMask,
+  NoFlags,
+  Passive,
+  PassiveMask,
+  Placement,
+  Update,
+} from "./fiberFlags";
 import { commitPlacement } from "./commitHostEffects";
+import {
+  HasEffect as HookHasEffect,
+  HookFlags,
+  Passive as HookPassive,
+} from "./effectTags";
+import { FunctionComponentUpdateQueue } from "./fiberHooks";
 
 export function recursivelyTraverseMutationEffects(
   root: FiberRoot,
@@ -101,17 +115,22 @@ function commitDeletionEffectsOnFiber(
 ) {
   switch (deletedFiber.tag) {
     case HostText:
-      // TODO: When implementing useEffect, we must recurse here
-      // even if we are a Host node to run cleanups of children.
-      // We would set hostParent = null before recursing to avoid
-      // multiple removeChild calls.
-
-      if (hostParent !== null)
-        removeChildFromContainer(hostParent, deletedFiber.stateNode);
-      break;
     case HostComponent:
+      // we only need to remove nearest host child,
+      // but we still need to recurse this component to find
+      // child function components that have to run cleanup function
+      // ex: <div><NavBar /><Dashboard /><div>
+      const prevHostParent = hostParent;
+      hostParent = null;
+      recursivelyTraverseDeletionEffects(
+        finishedRoot,
+        nearestMountedAncestor,
+        deletedFiber
+      );
+      hostParent = prevHostParent;
       if (hostParent !== null)
         removeChildFromContainer(hostParent, deletedFiber.stateNode);
+      commitReconciliationEffects(deletedFiber);
       break;
     case FunctionComponent:
       recursivelyTraverseDeletionEffects(
@@ -157,4 +176,131 @@ export function commitDeletionEffects(
   }
 
   commitDeletionEffectsOnFiber(root, returnFiber, deletedFiber);
+}
+
+// * _____useEffect section_______
+
+function recursivelyTraversePassiveMountEffects(
+  root: FiberRoot,
+  parentFiber: Fiber
+) {
+  if (parentFiber.subtreeFlags & PassiveMask) {
+    let child = parentFiber.child;
+    while (child !== null) {
+      commitPassiveMountEffects(root, child);
+      child = child.sibling;
+    }
+  }
+}
+
+function commitHookPassiveEffectMount(flags: HookFlags, finishedWork: Fiber) {
+  const updateQueue: FunctionComponentUpdateQueue = finishedWork.updateQueue;
+  const lastEffect = updateQueue === null ? null : updateQueue.lastEffect;
+  if (lastEffect !== null) {
+    // this is circular list, next should not be null at this point
+    const firstEffect = lastEffect.next!;
+    let effect = firstEffect;
+    do {
+      if ((effect.tag & flags) === flags) {
+        const create = effect.create;
+        effect.destroy = create();
+      }
+      effect = effect.next!;
+    } while (effect !== firstEffect);
+  }
+}
+
+export function commitPassiveMountEffects(
+  root: FiberRoot,
+  finishedWork: Fiber
+) {
+  const flags = finishedWork.flags;
+
+  switch (finishedWork.tag) {
+    case FunctionComponent:
+      recursivelyTraversePassiveMountEffects(root, finishedWork);
+      if (flags & Passive) {
+        commitHookPassiveEffectMount(HookPassive | HookHasEffect, finishedWork);
+      }
+      break;
+    case HostRoot:
+      recursivelyTraversePassiveMountEffects(root, finishedWork);
+  }
+}
+
+function commitHookPassiveUnmountEffects(
+  finishedWork: Fiber,
+  flags: HookFlags
+) {
+  const updateQueue: FunctionComponentUpdateQueue = finishedWork.updateQueue;
+  const lastEffect = updateQueue === null ? null : updateQueue.lastEffect;
+  if (lastEffect !== null) {
+    // this is circular list, next should not be null at this point
+    const firstEffect = lastEffect.next!;
+    let effect = firstEffect;
+    do {
+      if ((effect.tag & flags) === flags) {
+        const destroy = effect.destroy;
+        if (destroy !== undefined) {
+          effect.destroy = undefined;
+          try {
+            destroy();
+          } catch (error) {
+            console.error("Failed to call useEffect cleanup function: ", error);
+          }
+        }
+      }
+      effect = effect.next!;
+    } while (effect !== firstEffect);
+  }
+}
+
+function recursivelyTraversePassiveUnmountEffects(parentFiber: Fiber) {
+  const deletions = parentFiber.deletions;
+  if ((parentFiber.flags & ChildDeletion) !== NoFlags) {
+    if (deletions !== null) {
+      for (let i = 0; i < deletions.length; i++) {
+        const childToDelete = deletions[i];
+        commitPassiveUnmountInsideDeletedTree(childToDelete!);
+      }
+    }
+  }
+
+  if (parentFiber.subtreeFlags & PassiveMask) {
+    let child = parentFiber.child;
+    while (child !== null) {
+      commitPassiveUnmountEffect(child);
+      child = child.sibling;
+    }
+  }
+}
+
+function commitPassiveUnmountInsideDeletedTree(current: Fiber) {
+  switch (current.tag) {
+    case FunctionComponent:
+      commitHookPassiveUnmountEffects(current, Passive);
+      break;
+  }
+
+  let child = current.child;
+  while (child !== null) {
+    commitPassiveUnmountInsideDeletedTree(child);
+    child = child.sibling;
+  }
+}
+
+export function commitPassiveUnmountEffect(finishedWork: Fiber) {
+  switch (finishedWork.tag) {
+    case FunctionComponent:
+      recursivelyTraversePassiveUnmountEffects(finishedWork);
+      if (finishedWork.flags & Passive)
+        commitHookPassiveUnmountEffects(
+          finishedWork,
+          HookPassive | HookHasEffect
+        );
+      break;
+    default:
+      recursivelyTraversePassiveUnmountEffects(finishedWork);
+      break;
+  }
 }

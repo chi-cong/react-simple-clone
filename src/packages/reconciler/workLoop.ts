@@ -1,7 +1,11 @@
 import { createWorkInProgress, Fiber, FiberRoot } from "./fiber";
 import { beginWork } from "./beginWork";
 import { HostRoot } from "./workTags";
-import { commitMutationEffects } from "./commitWork";
+import {
+  commitMutationEffects,
+  commitPassiveMountEffects,
+  commitPassiveUnmountEffect,
+} from "./commitWork";
 import { completeWork } from "./completeWork";
 
 const RootInProgress = 0;
@@ -11,6 +15,11 @@ const RootCompleted = 5;
 let workInProgress: Fiber | null = null;
 let workInProgressRoot: FiberRoot | null = null;
 let workInProgressRootExitStatus = RootInProgress;
+
+const NO_PENDING_EFFECTS = 0;
+const HAS_PENDING_EFFECTS = 1;
+let pendingEffectsStatus: 0 | 1 = 0;
+let pendingEffectsRoot: null | FiberRoot = null;
 
 /** from ReactFiberLane */
 function mergeLanes(lane: number, newLane: number) {
@@ -52,12 +61,18 @@ function renderRootSync(root: FiberRoot) {
 }
 
 function commitRoot(root: FiberRoot, finishedWork: Fiber) {
+  do {
+    flushPassiveEffect();
+  } while (pendingEffectsStatus !== NO_PENDING_EFFECTS);
   if (finishedWork === null) return;
   if (finishedWork === root.current)
     throw new Error("Cannot commit the same tree as before.");
   commitMutationEffects(root, finishedWork);
   root.current = finishedWork;
   root.finishedWork = null;
+
+  pendingEffectsRoot = root;
+  pendingEffectsStatus = HAS_PENDING_EFFECTS;
 }
 
 /**
@@ -76,6 +91,7 @@ function performSyncWorkOnRoot(root: FiberRoot) {
       throw new Error("Unknown root exit status.");
   }
   commitRoot(root, finishedWork);
+  flushPassiveEffect();
 }
 
 function ensureRootIsScheduled(root: FiberRoot): void {
@@ -182,4 +198,14 @@ function completeUnitOfWork(unitOfWork: Fiber) {
   if (workInProgressRootExitStatus === RootInProgress) {
     workInProgressRootExitStatus = RootCompleted;
   }
+}
+
+function flushPassiveEffect() {
+  if (pendingEffectsStatus === NO_PENDING_EFFECTS) return;
+  pendingEffectsStatus = NO_PENDING_EFFECTS;
+  const root = pendingEffectsRoot;
+  if (root === null) return;
+  pendingEffectsRoot = null;
+  commitPassiveUnmountEffect(root.current);
+  commitPassiveMountEffects(root, root.current);
 }
