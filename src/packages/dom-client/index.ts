@@ -30,3 +30,10 @@ export const useState = (
 ): [any, (action: any) => void] => {
   return SharedInternals.Hook.useState(initialState);
 };
+
+export const useEffect = (
+  create: () => (() => void) | void,
+  deps: unknown[] | null
+) => {
+  return SharedInternals.Hook.useEffect(create, deps);
+};

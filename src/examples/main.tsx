@@ -1,4 +1,9 @@
-import { RSC, createRoot, useState } from "../packages/dom-client/index";
+import {
+  RSC,
+  createRoot,
+  useState,
+  useEffect,
+} from "../packages/dom-client/index";
 
 const root = createRoot(document.getElementById("root")!);
 
@@ -16,6 +21,13 @@ const App = () => {
   const increment = () => setCount(count + 1);
   const decrement = () => setCount(count - 1);
   const reset = () => setCount(0);
+
+  useEffect(() => {
+    console.log("Effect ran with count:", count);
+    return () => {
+      console.log("Cleanup for count:", count);
+    };
+  }, [count]);
 
   return (
     <div className='container'>
