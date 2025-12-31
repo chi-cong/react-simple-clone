@@ -6,11 +6,18 @@ A simplified, educational implementation of React's core architecture, built fro
 
 This project is a learning-focused reimplementation of React's internal mechanisms. By building a subset of React's features from the ground up, it provides deep insights into how React works under the hood.
 
+## Guide
+
+## 📖 Architecture Guide
+
+Want to understand the internal architecture? Check out the **[Architecture Documentation](./docs/README.md)**.
+It covers the core concepts including the Fiber Tree, Work Loop, and Reconciliation phases.
+
 ## ✨ Features
 
 - **Fiber Architecture**: Work-in-progress tree structure for efficient updates
 - **Reconciliation**: Diffing algorithm to minimize DOM operations
-- **Hooks**: State management with `useState` (more hooks coming soon)
+- **Hooks**: State management with `useState` and lifecycle hooks with `useEffect`
 - **JSX Support**: Custom JSX runtime for component syntax
 - **Event Handling**: Synthetic event system
 - **DOM Integration**: Efficient rendering and updates
@@ -79,7 +86,7 @@ root.render(<App />);
 This is a **simplified educational implementation** and differs from React in several ways:
 
 - No concurrent mode or time-slicing
-- Limited hook implementations (only `useState`)
+- Limited hook implementations (only `useState` and `useEffect`)
 - Simplified event system (no event pooling)
 - No error boundaries or suspense
 - No server-side rendering
@@ -106,5 +113,3 @@ This is a personal learning project, but if you're also learning React internals
 - GitHub: [@chi-cong](https://github.com/chi-cong)
 
 ---
-
-_Built with ❤️ to understand React's magic_

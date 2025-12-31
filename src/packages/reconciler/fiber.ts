@@ -11,19 +11,11 @@ export type Fiber = {
   child: Fiber | null;
   sibling: Fiber | null;
   index: number;
-  ref: any;
   pendingProps: any;
   memoizedProps: any;
   updateQueue: any;
   memoizedState: any;
-  dependencies: any;
   mode: number;
-  effectTag: number;
-  nextEffect: Fiber | null;
-  firstEffect: Fiber | null;
-  lastEffect: Fiber | null;
-  expirationTime: number;
-  childExpirationTime: number;
   alternate: Fiber | null;
   deletions: Array<Fiber> | null;
   flags: number;
@@ -35,7 +27,6 @@ export type Fiber = {
 export type Element = {
   type: any;
   key: string | null;
-  ref: any;
   props: any;
 };
 
@@ -62,19 +53,11 @@ export const createFiber = (
     child: null,
     sibling: null,
     index: 0,
-    ref: null,
     pendingProps,
     memoizedProps: null,
     updateQueue: null,
     memoizedState: null,
-    dependencies: null,
     mode,
-    effectTag: 0,
-    nextEffect: null,
-    firstEffect: null,
-    lastEffect: null,
-    expirationTime: 0,
-    childExpirationTime: 0,
     alternate: null,
     deletions: null,
     flags: NoFlags,
@@ -123,7 +106,6 @@ export const createWorkInProgress = (
     // update
     workInProgress.pendingProps = pendingProps;
 
-    workInProgress.effectTag = 0;
     workInProgress.flags = NoFlags;
     workInProgress.deletions = null;
   }
