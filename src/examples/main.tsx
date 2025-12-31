@@ -22,13 +22,6 @@ const App = () => {
   const decrement = () => setCount(count - 1);
   const reset = () => setCount(0);
 
-  useEffect(() => {
-    console.log("Effect ran with count:", count);
-    return () => {
-      console.log("Cleanup for count:", count);
-    };
-  }, [count]);
-
   return (
     <div className='container'>
       <h1>Simple Clone Counter</h1>
