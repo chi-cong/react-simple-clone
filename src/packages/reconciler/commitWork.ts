@@ -116,18 +116,6 @@ function commitDeletionEffectsOnFiber(
   switch (deletedFiber.tag) {
     case HostText:
     case HostComponent:
-      // we only need to remove nearest host child,
-      // but we still need to recurse this component to find
-      // child function components that have to run cleanup function
-      // ex: <div><NavBar /><Dashboard /><div>
-      const prevHostParent = hostParent;
-      hostParent = null;
-      recursivelyTraverseDeletionEffects(
-        finishedRoot,
-        nearestMountedAncestor,
-        deletedFiber
-      );
-      hostParent = prevHostParent;
       if (hostParent !== null)
         removeChildFromContainer(hostParent, deletedFiber.stateNode);
       commitReconciliationEffects(deletedFiber);
@@ -225,6 +213,9 @@ export function commitPassiveMountEffects(
       break;
     case HostRoot:
       recursivelyTraversePassiveMountEffects(root, finishedWork);
+      break;
+    default:
+      recursivelyTraversePassiveMountEffects(root, finishedWork);
   }
 }
 
@@ -278,7 +269,7 @@ function recursivelyTraversePassiveUnmountEffects(parentFiber: Fiber) {
 function commitPassiveUnmountInsideDeletedTree(current: Fiber) {
   switch (current.tag) {
     case FunctionComponent:
-      commitHookPassiveUnmountEffects(current, Passive);
+      commitHookPassiveUnmountEffects(current, HookPassive);
       break;
   }
 

@@ -45,10 +45,22 @@ This will compile TypeScript files, watch for changes, and serve the application
 ## 🎮 Example Usage
 
 ```tsx
-import { RSC, createRoot, useState } from "./packages/dom-client/index";
+import {
+  RSC,
+  createRoot,
+  useState,
+  useEffect,
+} from "./packages/dom-client/index";
 
 const App = () => {
   const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    console.log("Count updated:", count);
+    return () => {
+      console.log("Component unmounted");
+    };
+  }, [count]);
 
   return (
     <div>
