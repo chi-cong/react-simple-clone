@@ -25,7 +25,7 @@ You should already familiar with the basics of React and React concepts. Also it
   - The "downward" pass
   - Creating and updating children
 
-* **[Child Reconciliation](./04-reconciliation.md)** (Coming Soon)
+* **[Child Reconciliation](./04-reconciliation.md)**
   - The diffing algorithm
   - Handling lists and keys
 * **[Complete Work](./05-complete-work.md)** (Coming Soon)

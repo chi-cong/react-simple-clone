@@ -5,7 +5,7 @@ import {
   HostText,
   FunctionComponent,
 } from "./workTags";
-import { reconcileChildFibers } from "./childFiber";
+import { reconcileChildFibers, mountChildFibers } from "./childFiber";
 import { renderWithHooks } from "./fiberHooks";
 import { PerformedWork } from "./fiberFlags";
 import { processUpdateQueue } from "./classUpdateQueue";
@@ -80,7 +80,7 @@ function reconcileChildren(
   workInProgress: Fiber,
   newChildren: any
 ) {
-  const childReconciler = reconcileChildFibers;
+  const childReconciler = current ? reconcileChildFibers : mountChildFibers;
   const currentFirstChild = current ? current.child : null;
 
   workInProgress.child = childReconciler(

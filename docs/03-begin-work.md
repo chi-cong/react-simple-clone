@@ -62,6 +62,13 @@ function updateFunctionComponent(...) {
 
 Regardless of _how_ we got the children, the final step is always `reconcileChildren`. This function compares the `current` fiber's children (old) with the `nextChildren` (new) and flags differences.
 
+> **Optimization Note**:
+> We use `mountChildFibers` when mounting (first render) to avoid tracking side effects, and `reconcileChildFibers` for updates.
+>
+> ```typescript
+> const childReconciler = current ? reconcileChildFibers : mountChildFibers;
+> ```
+
 We will explore strictly _how_ that comparison works in the next chapter.
 
 ## Key Takeaway
