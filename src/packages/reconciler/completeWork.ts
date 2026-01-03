@@ -57,39 +57,22 @@ export function updateHostComponent(
   newProps: Props
 ) {
   const oldProps = current.memoizedProps;
-
-  // In mutation mode, this is sufficient for a bailout because
-  // we won't touch this node even if children changed.
   if (oldProps === newProps) return;
   workInProgress.flags |= Update;
 }
 
 function bubbleProperties(completedWork: Fiber) {
-  const didBailout =
-    completedWork.alternate !== null &&
-    completedWork.alternate.child === completedWork.child;
   let subtreeFlags = NoFlags;
-  if (didBailout) {
-    let child = completedWork.child;
-    while (child !== null) {
-      subtreeFlags |= child.subtreeFlags;
-      subtreeFlags |= child.flags;
 
-      child.return = completedWork;
-      child = child.sibling;
-    }
-    completedWork.subtreeFlags |= subtreeFlags;
-  } else {
-    let child = completedWork.child;
-    while (child !== null) {
-      subtreeFlags |= child.subtreeFlags;
-      subtreeFlags |= child.flags;
+  let child = completedWork.child;
+  while (child !== null) {
+    subtreeFlags |= child.subtreeFlags;
+    subtreeFlags |= child.flags;
 
-      child.return = completedWork;
-      child = child.sibling;
-    }
-    completedWork.subtreeFlags |= subtreeFlags;
+    child.return = completedWork;
+    child = child.sibling;
   }
+  completedWork.subtreeFlags |= subtreeFlags;
 }
 
 function appendAllChildren(parent: Element, workInProgress: Fiber) {

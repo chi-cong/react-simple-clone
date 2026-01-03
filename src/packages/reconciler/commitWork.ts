@@ -98,19 +98,17 @@ let hostParent: Element | null = null;
 
 function recursivelyTraverseDeletionEffects(
   finishedRoot: FiberRoot,
-  nearestMountedAncestor: Fiber,
   parent: Fiber
 ) {
   let child = parent.child;
   while (child !== null) {
-    commitDeletionEffectsOnFiber(finishedRoot, nearestMountedAncestor, child);
+    commitDeletionEffectsOnFiber(finishedRoot, child);
     child = child.sibling;
   }
 }
 
 function commitDeletionEffectsOnFiber(
   finishedRoot: FiberRoot,
-  nearestMountedAncestor: Fiber,
   deletedFiber: Fiber
 ) {
   switch (deletedFiber.tag) {
@@ -121,19 +119,11 @@ function commitDeletionEffectsOnFiber(
       commitReconciliationEffects(deletedFiber);
       break;
     case FunctionComponent:
-      recursivelyTraverseDeletionEffects(
-        finishedRoot,
-        nearestMountedAncestor,
-        deletedFiber
-      );
+      recursivelyTraverseDeletionEffects(finishedRoot, deletedFiber);
       commitReconciliationEffects(deletedFiber);
       break;
     default:
-      recursivelyTraverseDeletionEffects(
-        finishedRoot,
-        nearestMountedAncestor,
-        deletedFiber
-      );
+      recursivelyTraverseDeletionEffects(finishedRoot, deletedFiber);
       break;
   }
 }
@@ -163,7 +153,8 @@ export function commitDeletionEffects(
     throw new Error("Bug: No host parent found");
   }
 
-  commitDeletionEffectsOnFiber(root, returnFiber, deletedFiber);
+  commitDeletionEffectsOnFiber(root, deletedFiber);
+  hostParent = null;
 }
 
 // * _____useEffect section_______

@@ -10,6 +10,12 @@ You should already familiar with the basics of React and React concepts. Also it
 
 ## Table of Contents
 
+### Part 0: Environment & Setup
+
+- **[Project Setup](./00-setup.md)** (Coming Soon)
+  - JSX Transformation (React.createElement)
+  - TypeScript Configuration
+
 ### Part 1: Core Structure & Implementation
 
 - **[Our Fiber Implementation](./01-fiber-implementation.md)**
@@ -28,13 +34,13 @@ You should already familiar with the basics of React and React concepts. Also it
 * **[Child Reconciliation](./04-reconciliation.md)**
   - The diffing algorithm
   - Handling lists and keys
-* **[Complete Work](./05-complete-work.md)** (Coming Soon)
+* **[Complete Work](./05-complete-work.md)**
   - The "upward" pass
   - Creating DOM instances and bubbling flags
 
 ### Part 3: The Commit Phase
 
-- **[Mutation & Layout Effects](./06-commit-phase.md)** (Coming Soon)
+- **[Mutation Effects](./06-commit-phase.md)**
   - Applying changes to the real DOM
   - Layout effect execution
 - **[Passive Effects](./07-passive-effects.md)** (Coming Soon)

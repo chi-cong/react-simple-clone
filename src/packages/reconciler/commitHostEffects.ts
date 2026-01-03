@@ -22,10 +22,10 @@ function insertOrAppendPlacementNode(
   const child = node.child;
   if (child !== null) {
     insertOrAppendPlacementNode(child, before, parent);
-    let letSibling = child.sibling;
-    while (letSibling !== null) {
-      insertOrAppendPlacementNode(letSibling, before, parent);
-      letSibling = letSibling.sibling;
+    let sibling = child.sibling;
+    while (sibling !== null) {
+      insertOrAppendPlacementNode(sibling, before, parent);
+      sibling = sibling.sibling;
     }
   }
 }
