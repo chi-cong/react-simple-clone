@@ -10,12 +10,6 @@ You should already familiar with the basics of React and React concepts. Also it
 
 ## Table of Contents
 
-### Part 0: Environment & Setup
-
-- **[Project Setup](./00-setup.md)** (Coming Soon)
-  - JSX Transformation (React.createElement)
-  - TypeScript Configuration
-
 ### Part 1: Core Structure & Implementation
 
 - **[Our Fiber Implementation](./01-fiber-implementation.md)**
@@ -30,11 +24,10 @@ You should already familiar with the basics of React and React concepts. Also it
 - **[Begin Work](./03-begin-work.md)**
   - The "downward" pass
   - Creating and updating children
-
-* **[Child Reconciliation](./04-reconciliation.md)**
+- **[Child Reconciliation](./04-reconciliation.md)**
   - The diffing algorithm
   - Handling lists and keys
-* **[Complete Work](./05-complete-work.md)**
+- **[Complete Work](./05-complete-work.md)**
   - The "upward" pass
   - Creating DOM instances and bubbling flags
 
@@ -52,6 +45,14 @@ You should already familiar with the basics of React and React concepts. Also it
   - How hooks are stored (Linked Lists)
   - `renderWithHooks` and the Cursor
   - `useState` implementation (Mount vs Update)
-- **[Scheduling & The Trigger](./09-scheduling.md)** (Coming Soon)
-  - `scheduleUpdateOnFiber`
-  - Re-triggering the work loop
+- **[Scheduling & The Trigger](./09-scheduling.md)**
+  - `scheduleUpdateOnFiber`: The "Big Bang"
+  - `performSyncWorkOnRoot`: The Orchestrator
+  - The Full Cycle of Life
+
+### Part 5: Public API & Setup
+
+- **[Public API & Setup](./10-public-api.md)**
+  - Connecting `reconciler` to `dom-client`
+  - `createRoot` and `fiberReconciler.ts`
+  - JSX & Build Configuration
