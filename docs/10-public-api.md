@@ -113,8 +113,7 @@ In `tsconfig.json`:
 {
   "compilerOptions": {
     "jsx": "react",
-    "jsxFactory": "RSC.createElement",
-    "jsxFragmentFactory": "RSC.Fragment"
+    "jsxFactory": "RSC.createElement"
   }
 }
 ```
@@ -143,4 +142,12 @@ You have now built a working, simplified clone of React.
 - **Renderer**: The host config (DOM operations).
 - **Public API**: The entry point (`createRoot`, Hooks).
 
-That's it! That's how you can build a React clone. Whether you want to contribute to JS frameworks, create your own framework, impress interviewers, or just being curious how React works, I hope you find this helpful.
+That's it! That's how you can build a React clone. Whether you want to contribute to JS frameworks, create your own framework, impress interviewers, or just being curious how React works, I hope you find this helpful as a starting point.
+
+## What's next to learn?
+
+After this guide, you can explore some concepts that I have not covered or skipped.
+
+- **Async rendering and concurrent mode**: Although synchronous rendering still works, it's not the best way to build a modern web application. You probably notice that I hardcoded lane to `1` and ignored it in `childFiber`. In fact, I tried to not include it, but it's deeply integrated with `scheduleUpdateOnFiber`. I wasn't sure how to remove it, so I left it as is. Lanes are responsible for React batch updates in addition to concurrent mode. Adding these features would make this project no longer "simple" so I skipped them, but you can try to add them yourself.
+- **Hooks**: I only implemented the two most used hooks: `useState` and `useEffect`. It might be a good idea to implement `useRef`, `useContext`, `useMemo`, `useCallback`, and so on.
+- **Server Side Rendering**: Have you ever scratched your head wondering why your NextJs app is yelling "Hydration error"? SSR in modern frameworks is magic, but when something goes wrong, debugging it is a nightmare. Maybe understanding Hydration can somehow help you with it?

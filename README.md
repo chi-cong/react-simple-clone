@@ -6,8 +6,6 @@ A simplified, educational implementation of React's core architecture, built fro
 
 This project is a learning-focused reimplementation of React's internal mechanisms. By building a subset of React's features from the ground up, it provides deep insights into how React works under the hood.
 
-## Guide
-
 ## 📖 Architecture Guide
 
 Want to understand the internal architecture? Check out the **[Architecture Documentation](./docs/README.md)**.
@@ -111,5 +109,3 @@ This is a personal learning project, but if you're also learning React internals
 **Chi Cong Vu**
 
 - GitHub: [@chi-cong](https://github.com/chi-cong)
-
----
