@@ -42,12 +42,16 @@ You should already familiar with the basics of React and React concepts. Also it
 
 - **[Mutation Effects](./06-commit-phase.md)**
   - Applying changes to the real DOM
-  - Layout effect execution
-- **[Passive Effects](./07-passive-effects.md)** (Coming Soon)
+- **[Passive Effects](./07-passive-effects.md)**
   - `useEffect` scheduling and flushing
+  - Mount vs Unmount phases
 
 ### Part 4: State & Logic
 
-- **[Hooks Implementation](./08-hooks.md)** (Coming Soon)
-  - How hooks are stored on fibers
-  - `useState` and dispatcher logic
+- **[Hooks Implementation](./08-hooks-implementation.md)**
+  - How hooks are stored (Linked Lists)
+  - `renderWithHooks` and the Cursor
+  - `useState` implementation (Mount vs Update)
+- **[Scheduling & The Trigger](./09-scheduling.md)** (Coming Soon)
+  - `scheduleUpdateOnFiber`
+  - Re-triggering the work loop

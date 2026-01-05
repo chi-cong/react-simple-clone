@@ -15,8 +15,6 @@ import { Passive as PassiveEffect } from "./fiberFlags";
 export type Update<S, A> = {
   lane: number;
   action: A;
-  hasEagerState: boolean;
-  eagerState: S | null;
   next: Update<S, A>;
 };
 
@@ -24,8 +22,6 @@ export type UpdateQueue<S, A> = {
   pending: Update<S, A> | null;
   lanes: number;
   dispatch: ((action: A) => any) | null;
-  lastRenderedReducer: ((state: S, action: A) => S) | null;
-  lastRenderedState: S | null;
 };
 
 export type Hook = {
@@ -157,8 +153,6 @@ function dispatchSetState<S, A>(
   const update: Update<S, A> = {
     lane,
     action,
-    hasEagerState: false,
-    eagerState: null,
     next: null as any,
   };
 
@@ -188,8 +182,6 @@ function mountState<S>(initialState: (() => S) | S) {
     pending: null,
     lanes: 1,
     dispatch: null,
-    lastRenderedReducer: basicStateReducer,
-    lastRenderedState: initialState,
   };
   hook.queue = queue;
   const dispatch: Dispatch<BasicStateAction<S>> = dispatchSetState.bind(

@@ -88,7 +88,10 @@ Open [commitHostEffects.ts](../src/packages/reconciler/commitHostEffects.ts).
 
 If a fiber has the `Placement` flag, we need to insert it into the DOM. This is handled in `commitPlacement`.
 
-1.  **Find Host Parent**: Traverse up to find the nearest container (`div` or Root).
+1.  **Find Host Parent**: Traverse up to find the nearest container.
+    - If `HostComponent`: Use `fiber.stateNode` (the DOM element).
+    - If `HostRoot`: Use `fiber.stateNode.containerInfo`.
+      - _Note_: The `HostRoot` fiber's `stateNode` is the internal `FiberRoot` object (which holds the tree). The actual DOM node (like `<div id="root">`) is stored inside it as `containerInfo`.
 2.  **Find Insertion Point (`getHostSibling`)**:
     We need a stable DOM node to act as an anchor for insertion (`parentNode.insertBefore(newNode, anchor)`). The algorithm has three internal steps:
 
@@ -104,10 +107,14 @@ If a fiber has the `Placement` flag, we need to insert it into the DOM. This is 
 
 ## Swapping the Root (`root.current = finishedWork`)
 
+As shown in the `commitRoot` code at the beginning of this document (Step 3), we execute the most critical assignment in the entire engine.
+
 This is the moment the "Work in Progress" officially becomes the "Current" state.
 
-- Before this line, the screen shows the old tree.
-- After this line, the internal fiber tree matches what we just applied to the DOM.
+- **Before this line**, `root.current` points to the _old_ Fiber tree (what's currently on screen).
+- **After this line**, `root.current` points to the _new_ Fiber tree (which matches the DOM updates we just applied).
+
+Any Update scheduled _after_ this line will clone from this new tree.
 
 ## Optimization: The Flag Check
 
