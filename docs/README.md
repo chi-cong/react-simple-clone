@@ -2,11 +2,12 @@
 
 Welcome to the architectural documentation for React Simple Clone. This guide is designed to walk you through the codebase by explaining the core concepts and phases of the React rendering engine.
 
-> **Note**: This documentation reflects my personal learning and understanding of React's architecture. It may not perfectly align with the official React implementation or the exact mental models used by the React core team.
+> [!NOTE]
+> This documentation reflects my personal learning and understanding of React's architecture. It may not perfectly align with the official React implementation or the exact mental models used by the React core team.
 
 ## Prerequisites
 
-You should already familiar with the basics of React and React concepts. Also it's good to have a basic understanding of the React Fiber architecture. You could read [this article](https://blog.ag-grid.com/inside-fiber-an-in-depth-overview-of-the-new-reconciliation-algorithm-in-react/) to get a better understanding of the Fiber architecture or many other online articles explaining the Fiber architecture.
+You should already be familiar with the basics of React and its core concepts. It is also helpful to have a basic understanding of the React Fiber architecture. You can read [this article](https://blog.ag-grid.com/inside-fiber-an-in-depth-overview-of-the-new-reconciliation-algorithm-in-react/) or other online resources to better understand Fiber.
 
 ## Table of Contents
 

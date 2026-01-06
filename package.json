@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc && node scripts/add-extensions.js",
     "dev": "npx tsc-watch --onSuccess \"node scripts/add-extensions.js\"",
     "serve": "npx http-server . -c-1",

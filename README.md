@@ -1,6 +1,6 @@
 # React Simple Clone
 
-A simplified, educational implementation of React's core architecture, built from scratch to understand the fundamental principles of the Fiber reconciler, hooks system, and virtual DOM reconciliation.
+A simplified implementation of React's core architecture, built from scratch to understand the fundamental principles of the Fiber reconciler, hooks system, and virtual DOM reconciliation.
 
 ## 🎯 Project Goal
 
@@ -8,8 +8,7 @@ This project is a learning-focused reimplementation of React's internal mechanis
 
 ## 📖 Architecture Guide
 
-Want to understand the internal architecture? Check out the **[Architecture Documentation](./docs/README.md)**.
-It covers the core concepts including the Fiber Tree, Work Loop, and Reconciliation phases.
+Want to understand the internal architecture? Check out the **[Architecture Documentation](./docs/README.md)**. It covers core concepts including the Fiber Tree, Work Loop, and Reconciliation phases.
 
 ## ✨ Features
 
@@ -21,11 +20,6 @@ It covers the core concepts including the Fiber Tree, Work Loop, and Reconciliat
 - **DOM Integration**: Efficient rendering and updates
 
 ## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js (v16 or higher)
-- pnpm (v10.14.0 or higher)
 
 ### Installation
 
@@ -46,6 +40,9 @@ pnpm start
 ```
 
 This will compile TypeScript files, watch for changes, and serve the application. Open your browser to `http://localhost:8080` to see the demo counter application. Manually refresh the browser to see your changes.
+
+> [!NOTE]
+> I assume you already installed Nodejs. This project use pnpm as package manager. If you don't want to use pnpm, change `start` script in package.json
 
 ## 🎮 Example Usage
 
@@ -94,18 +91,8 @@ This is a **simplified educational implementation** and differs from React in se
 
 This project is a derivative work based on the [React](https://github.com/facebook/react) source code. Core concepts, architecture patterns, and algorithmic approaches are adapted from the original implementation by Meta Platforms, Inc. and affiliates.
 
-This is an **educational project** created to learn and teach React's internal mechanisms. It is not intended for production use.
+This project is created to learn React's internal mechanisms. It is not intended for production use.
 
 ## 📄 License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details, which includes acknowledgment of Meta Platforms, Inc.'s original copyright.
-
-## 🤝 Contributing
-
-This is a personal learning project, but if you're also learning React internals and have ideas or spot something interesting, feel free to reach out or share your thoughts!
-
-## 📬 Contact
-
-**Chi Cong Vu**
-
-- GitHub: [@chi-cong](https://github.com/chi-cong)
