@@ -78,7 +78,7 @@ root.render(<App />);
 
 ## Key Differences from React
 
-This is a **simplified educational implementation** and differs from React in several ways:
+This is a **simplified implementation** and differs from React in several ways:
 
 - No concurrent mode or time-slicing
 - Limited hook implementations (only `useState` and `useEffect`)
