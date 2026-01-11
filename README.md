@@ -2,15 +2,15 @@
 
 A simplified implementation of React's core architecture, built from scratch to understand the fundamental principles of the Fiber reconciler, hooks system, and virtual DOM reconciliation.
 
-## 🎯 Project Goal
+## Project Goal
 
 This project is a learning-focused reimplementation of React's internal mechanisms. By building a subset of React's features from the ground up, it provides deep insights into how React works under the hood.
 
-## 📖 Architecture Guide
+## Architecture Guide
 
-Want to understand the internal architecture? Check out the **[Architecture Documentation](./docs/README.md)**. It covers core concepts including the Fiber Tree, Work Loop, and Reconciliation phases.
+To understand the internal architecture and how to build this step by step, check out the **[Architecture Documentation](./docs/README.md)**. It covers core concepts including the Fiber Tree, Work Loop, and Reconciliation phases.
 
-## ✨ Features
+## Features
 
 - **Fiber Architecture**: Work-in-progress tree structure for efficient updates
 - **Reconciliation**: Diffing algorithm to minimize DOM operations
@@ -19,7 +19,7 @@ Want to understand the internal architecture? Check out the **[Architecture Docu
 - **Event Handling**: Synthetic event system
 - **DOM Integration**: Efficient rendering and updates
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Installation
 
@@ -42,9 +42,9 @@ pnpm start
 This will compile TypeScript files, watch for changes, and serve the application. Open your browser to `http://localhost:8080` to see the demo counter application. Manually refresh the browser to see your changes.
 
 > [!NOTE]
-> I assume you already installed Nodejs. This project use pnpm as package manager. If you don't want to use pnpm, change `start` script in package.json
+> I assume you already installed Nodejs. This project uses pnpm as package manager. If you don't want to use pnpm, change `start` script in package.json
 
-## 🎮 Example Usage
+## Example Usage
 
 ```tsx
 import {
@@ -76,7 +76,7 @@ const root = createRoot(document.getElementById("root")!);
 root.render(<App />);
 ```
 
-## 🔍 Key Differences from React
+## Key Differences from React
 
 This is a **simplified educational implementation** and differs from React in several ways:
 
@@ -93,6 +93,6 @@ This project is a derivative work based on the [React](https://github.com/facebo
 
 This project is created to learn React's internal mechanisms. It is not intended for production use.
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details, which includes acknowledgment of Meta Platforms, Inc.'s original copyright.
