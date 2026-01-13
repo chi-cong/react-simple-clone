@@ -21,7 +21,7 @@ To understand the internal architecture and how to build this step by step, chec
 
 ## Getting Started
 
-you can try this project on [StackBlitz](https://stackblitz.com/edit/github-4zkuybvp?file=package.json).
+You can try this project on [StackBlitz](https://stackblitz.com/edit/github-4zkuybvp?file=package.json).
 
 ### Installation
 
