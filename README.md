@@ -23,6 +23,9 @@ To understand the internal architecture and how to build this step by step, chec
 
 You can try this project on [StackBlitz](https://stackblitz.com/edit/github-4zkuybvp?file=package.json).
 
+> [!NOTE]
+> This project is configured to start automatically on StackBlitz. If the development server stops or updates aren't reflected, run `pnpm start` in the terminal manually or refresh StackBlitz web container.
+
 ### Installation
 
 ```bash
